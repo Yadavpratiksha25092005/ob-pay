@@ -1,0 +1,16 @@
+FROM golang:1.23 AS builder
+ENV GOTOOLCHAIN=auto
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+ENV GOARCH=amd64
+WORKDIR /app
+COPY backend/settlement-service/ .
+RUN go mod tidy
+RUN go build -o main .
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root/
+COPY --from=builder /app/main .
+EXPOSE 8005
+CMD ["./main"]
