@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: obpay_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pratiksha123
+      POSTGRES_DB: obpay_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api-gateway:
+    build: ./backend/api-gateway
+    container_name: obpay_api_gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - JWT_SECRET=obpay_super_secret_key_2026
+      - ALLOWED_ORIGINS=http://localhost:3000
+      - APP_ENV=development
+    depends_on:
+      - user-service
+      - payment-service
+      - notification-service
+
+  user-service:
+    build: ./backend/user-service
+    container_name: obpay_user_service
+    ports:
+      - "8001:8001"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=pratiksha123
+      - DB_NAME=obpay_db
+      - JWT_SECRET=obpay_super_secret_key_2026
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  payment-service:
+    build: ./backend/payment-service
+    container_name: obpay_payment_service
+    ports:
+      - "8002:8002"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=pratiksha123
+      - DB_NAME=obpay_db
+      - JWT_SECRET=obpay_super_secret_key_2026
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  notification-service:
+    build: ./backend/notification-service
+    container_name: obpay_notification_service
+    ports:
+      - "8004:8004"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=pratiksha123
+      - DB_NAME=obpay_db
+      - FIREBASE_CREDENTIALS_FILE=/app/serviceAccountKey.json
+    volumes:
+      - ./backend/notification-service/serviceAccountKey.json:/app/serviceAccountKey.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  rewards-service:
+    build: ./backend/rewards-service
+    container_name: obpay_rewards_service
+    ports:
+      - "8012:8012"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=pratiksha123
+      - DB_NAME=obpay_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  analytics-service:
+    build: ./backend/analytics-service
+    container_name: obpay_analytics_service
+    ports:
+      - "8013:8013"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=pratiksha123
+      - DB_NAME=obpay_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  beneficiary-service:
+    build: ./backend/beneficiary-service
+    container_name: obpay_beneficiary_service
+    ports:
+      - "8014:8014"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=pratiksha123
+      - DB_NAME=obpay_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

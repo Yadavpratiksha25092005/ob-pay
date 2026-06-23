@@ -1,0 +1,21 @@
+# Environment secrets — never commit
+backend/.env
+**/.env.local
+
+# Firebase service account key
+**/serviceAccountKey.json
+
+# Go build artifacts
+backend/**/main
+backend/**/*.exe
+
+# Flutter build output
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+
+# IDE
+.idea/
+.vscode/
+*.iml

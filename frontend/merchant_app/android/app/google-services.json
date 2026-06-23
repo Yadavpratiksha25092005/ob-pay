@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "882476799094",
+    "project_id": "onebharat-pay",
+    "storage_bucket": "onebharat-pay.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:882476799094:android:41521131d7108e05fa3b57",
+        "android_client_info": {
+          "package_name": "com.example.customer_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeEQMG8cAwvTXDIZMSPsweAHutCLCxOOc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:882476799094:android:3f341d84cfca7690fa3b57",
+        "android_client_info": {
+          "package_name": "com.example.merchant_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeEQMG8cAwvTXDIZMSPsweAHutCLCxOOc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
