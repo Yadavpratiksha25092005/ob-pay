@@ -3,85 +3,60 @@ package main
 import (
 	"io"
 	"net/http"
-
+	"os"
 	"github.com/gin-gonic/gin"
 )
 
-const (
-	userServiceURL         = "http://localhost:8001"
-	paymentServiceURL      = "http://localhost:8002"
-	transactionServiceURL  = "http://localhost:8003"
-	notificationServiceURL = "http://localhost:8004"
-	settlementServiceURL   = "http://localhost:8005"
-)
+func getServiceURL(envKey, defaultURL string) string {
+	if v := os.Getenv(envKey); v != "" {
+		return v
+	}
+	return defaultURL
+}
 
 func proxyRequest(c *gin.Context, targetURL string) {
-	// Build target URL
 	url := targetURL + c.Request.URL.Path
 	if c.Request.URL.RawQuery != "" {
 		url += "?" + c.Request.URL.RawQuery
 	}
-
-	// Create new request
 	req, err := http.NewRequest(c.Request.Method, url, c.Request.Body)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to create request",
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request"})
 		return
 	}
-
-	// Copy headers
 	for key, values := range c.Request.Header {
 		for _, value := range values {
 			req.Header.Add(key, value)
 		}
 	}
-
-	// Send request
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"error": "Service unavailable",
-		})
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Service unavailable"})
 		return
 	}
 	defer resp.Body.Close()
-
-	// Copy response headers
 	for key, values := range resp.Header {
 		for _, value := range values {
 			c.Header(key, value)
 		}
 	}
-
-	// Copy response body
 	c.Status(resp.StatusCode)
 	io.Copy(c.Writer, resp.Body)
 }
 
-// User Service proxy
 func UserServiceProxy(c *gin.Context) {
-	proxyRequest(c, userServiceURL)
+	proxyRequest(c, getServiceURL("USER_SERVICE_URL", "http://localhost:8001"))
 }
-
-// Payment Service proxy
 func PaymentServiceProxy(c *gin.Context) {
-	proxyRequest(c, paymentServiceURL)
+	proxyRequest(c, getServiceURL("PAYMENT_SERVICE_URL", "http://localhost:8002"))
 }
-
-// Transaction Service proxy
 func TransactionServiceProxy(c *gin.Context) {
-	proxyRequest(c, transactionServiceURL)
+	proxyRequest(c, getServiceURL("TRANSACTION_SERVICE_URL", "http://localhost:8003"))
 }
-
-// Notification Service proxy
 func NotificationServiceProxy(c *gin.Context) {
-	proxyRequest(c, notificationServiceURL)
+	proxyRequest(c, getServiceURL("NOTIFICATION_SERVICE_URL", "http://localhost:8004"))
 }
-
-// Settlement Service proxy
 func SettlementServiceProxy(c *gin.Context) {
-	proxyRequest(c, settlementServiceURL)
+	proxyRequest(c, getServiceURL("SETTLEMENT_SERVICE_URL", "http://localhost:8005"))
 }
