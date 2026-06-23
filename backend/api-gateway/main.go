@@ -48,15 +48,18 @@ func main() {
 
 	r.GET("/services/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"user-service":         "http://localhost:8001/health",
-			"payment-service":      "http://localhost:8002/health",
-			"transaction-service":  "http://localhost:8003/health",
-			"notification-service": "http://localhost:8004/health",
-			"settlement-service":   "http://localhost:8005/health",
+			"user-service":         getServiceURL("USER_SERVICE_URL", "http://localhost:8001") + "/health",
+			"payment-service":      getServiceURL("PAYMENT_SERVICE_URL", "http://localhost:8002") + "/health",
+			"transaction-service":  getServiceURL("TRANSACTION_SERVICE_URL", "http://localhost:8003") + "/health",
+			"notification-service": getServiceURL("NOTIFICATION_SERVICE_URL", "http://localhost:8004") + "/health",
+			"settlement-service":   getServiceURL("SETTLEMENT_SERVICE_URL", "http://localhost:8005") + "/health",
+			"rewards-service":      getServiceURL("REWARDS_SERVICE_URL", "http://localhost:8012") + "/health",
+			"analytics-service":    getServiceURL("ANALYTICS_SERVICE_URL", "http://localhost:8013") + "/health",
+			"beneficiary-service":  getServiceURL("BENEFICIARY_SERVICE_URL", "http://localhost:8014") + "/health",
 		})
 	})
 
-	// Admin routes (JWT required, role=admin)
+	// Admin routes
 	adminGroup := r.Group("/api/v1/admin")
 	adminGroup.Use(AdminMiddleware())
 	{
@@ -105,44 +108,44 @@ func main() {
 
 		// Rewards routes
 		public.GET("/rewards/:user_id", func(c *gin.Context) {
-			proxyRequest(c, "http://localhost:8012/api/v1/rewards/"+c.Param("user_id"))
+			proxyRequest(c, getServiceURL("REWARDS_SERVICE_URL", "http://localhost:8012")+"/api/v1/rewards/"+c.Param("user_id"))
 		})
 		public.POST("/rewards/event", func(c *gin.Context) {
-			proxyRequest(c, "http://localhost:8012/api/v1/rewards/event")
+			proxyRequest(c, getServiceURL("REWARDS_SERVICE_URL", "http://localhost:8012")+"/api/v1/rewards/event")
 		})
 		public.POST("/rewards/add", func(c *gin.Context) {
-			proxyRequest(c, "http://localhost:8012/api/v1/rewards/add")
+			proxyRequest(c, getServiceURL("REWARDS_SERVICE_URL", "http://localhost:8012")+"/api/v1/rewards/add")
 		})
 		public.POST("/rewards/redeem", func(c *gin.Context) {
-			proxyRequest(c, "http://localhost:8012/api/v1/rewards/redeem")
+			proxyRequest(c, getServiceURL("REWARDS_SERVICE_URL", "http://localhost:8012")+"/api/v1/rewards/redeem")
 		})
 		public.GET("/offers", func(c *gin.Context) {
-			proxyRequest(c, "http://localhost:8012/api/v1/offers")
+			proxyRequest(c, getServiceURL("REWARDS_SERVICE_URL", "http://localhost:8012")+"/api/v1/offers")
 		})
 
 		// Analytics routes
 		public.GET("/analytics/:user_id", func(c *gin.Context) {
-			proxyRequest(c, "http://localhost:8013/api/v1/analytics/"+c.Param("user_id"))
+			proxyRequest(c, getServiceURL("ANALYTICS_SERVICE_URL", "http://localhost:8013")+"/api/v1/analytics/"+c.Param("user_id"))
 		})
 		public.GET("/analytics/:user_id/summary", func(c *gin.Context) {
-			proxyRequest(c, "http://localhost:8013/api/v1/analytics/"+c.Param("user_id")+"/summary")
+			proxyRequest(c, getServiceURL("ANALYTICS_SERVICE_URL", "http://localhost:8013")+"/api/v1/analytics/"+c.Param("user_id")+"/summary")
 		})
 		public.GET("/analytics/admin/overview", func(c *gin.Context) {
-			proxyRequest(c, "http://localhost:8013/api/v1/analytics/admin/overview")
+			proxyRequest(c, getServiceURL("ANALYTICS_SERVICE_URL", "http://localhost:8013")+"/api/v1/analytics/admin/overview")
 		})
 
-		// Beneficiary / Contacts routes
+		// Beneficiary routes
 		public.POST("/beneficiaries", func(c *gin.Context) {
-			proxyRequest(c, "http://localhost:8014/api/v1/beneficiaries")
+			proxyRequest(c, getServiceURL("BENEFICIARY_SERVICE_URL", "http://localhost:8014")+"/api/v1/beneficiaries")
 		})
 		public.GET("/beneficiaries/:user_id", func(c *gin.Context) {
-			proxyRequest(c, "http://localhost:8014/api/v1/beneficiaries/"+c.Param("user_id"))
+			proxyRequest(c, getServiceURL("BENEFICIARY_SERVICE_URL", "http://localhost:8014")+"/api/v1/beneficiaries/"+c.Param("user_id"))
 		})
 		public.PUT("/beneficiaries/:id", func(c *gin.Context) {
-			proxyRequest(c, "http://localhost:8014/api/v1/beneficiaries/"+c.Param("id"))
+			proxyRequest(c, getServiceURL("BENEFICIARY_SERVICE_URL", "http://localhost:8014")+"/api/v1/beneficiaries/"+c.Param("id"))
 		})
 		public.DELETE("/beneficiaries/:id", func(c *gin.Context) {
-			proxyRequest(c, "http://localhost:8014/api/v1/beneficiaries/"+c.Param("id"))
+			proxyRequest(c, getServiceURL("BENEFICIARY_SERVICE_URL", "http://localhost:8014")+"/api/v1/beneficiaries/"+c.Param("id"))
 		})
 	}
 
