@@ -1,11 +1,10 @@
-FROM golang:latest AS builder
+FROM golang:1.23 AS builder
 ENV GOTOOLCHAIN=auto
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 ENV GOARCH=amd64
 WORKDIR /app
 COPY . .
-RUN go mod download
 RUN go mod tidy
 RUN go build -o main .
 
