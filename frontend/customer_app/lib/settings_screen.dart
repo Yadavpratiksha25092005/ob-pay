@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'theme_toggle.dart';
 
 class SettingsScreen extends StatefulWidget {
   final String userId;
@@ -26,16 +27,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgPage,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF1A202C)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Settings',
-            style: TextStyle(color: Color(0xFF1A202C), fontSize: 18, fontWeight: FontWeight.bold)),
-      ),
+    appBar: AppBar(
+  backgroundColor: Colors.white,
+  elevation: 0,
+  leading: IconButton(
+    icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF1A202C)),
+    onPressed: () => Navigator.pop(context),
+  ),
+  title: const Text('Settings',
+      style: TextStyle(color: Color(0xFF1A202C), fontSize: 18, fontWeight: FontWeight.bold)),
+  actions: const [
+    ThemeToggleButton(),
+    SizedBox(width: 8),
+  ],
+),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

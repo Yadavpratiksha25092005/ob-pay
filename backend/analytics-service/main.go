@@ -69,9 +69,12 @@ func main() {
 
 	// Platform-wide admin analytics
 	r.GET("/api/v1/analytics/admin/overview", getAdminOverview)
-
-	log.Println("Analytics Service running on :8013")
-	r.Run(":8013")
+port := os.Getenv("PORT")
+if port == "" {
+    port = "8013"
+}
+log.Println("Analytics Service running on :" + port)
+r.Run(":" + port)
 }
 
 // periodStart returns the start time for the requested period.

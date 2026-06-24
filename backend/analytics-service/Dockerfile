@@ -4,7 +4,11 @@ ENV CGO_ENABLED=0
 ENV GOOS=linux
 ENV GOARCH=amd64
 WORKDIR /app
+<<<<<<< HEAD
 COPY . .
+=======
+COPY backend/analytics-service/ .
+>>>>>>> fafe03b9f5505580bc9fc1d2f929c32f7ef1606b
 RUN go mod tidy
 RUN go build -o main .
 

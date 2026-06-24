@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'auth_screen.dart';
 import 'kyc_screen.dart';
+import 'theme_toggle.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userId;
@@ -60,6 +61,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 fontSize: 18,
                 fontWeight: FontWeight.bold)),
         actions: [
+           ThemeToggleButton(),
+  SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.settings_outlined, color: Color(0xFF6C63FF)),
             onPressed: () {},

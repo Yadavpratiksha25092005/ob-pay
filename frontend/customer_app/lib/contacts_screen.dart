@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'wallet_screen.dart';
+import 'theme_toggle.dart';
 
 class ContactsScreen extends StatefulWidget {
   final String userId;
@@ -214,10 +215,12 @@ class _ContactsScreenState extends State<ContactsScreen> {
                 color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: textDark),
         actions: [
+          const ThemeToggleButton(),
           IconButton(
             icon: const Icon(Icons.person_add_rounded, color: primary),
             onPressed: _showAddSheet,
             tooltip: 'Add Contact',
+
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'theme_toggle.dart';
 
 class HistoryScreen extends StatefulWidget {
   final String userId;
@@ -94,6 +95,8 @@ class _HistoryScreenState extends State<HistoryScreen>
                 fontSize: 18,
                 fontWeight: FontWeight.bold)),
         actions: [
+          ThemeToggleButton(),
+  SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.search_rounded, color: Colors.black87),
             onPressed: () {},

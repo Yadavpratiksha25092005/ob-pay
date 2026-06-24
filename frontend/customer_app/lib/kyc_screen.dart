@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'theme_toggle.dart';
 
 class KYCScreen extends StatefulWidget {
   final String userId;
@@ -104,12 +105,16 @@ class _KYCScreenState extends State<KYCScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF6C63FF),
-        title: const Text('KYC Verification',
-            style: TextStyle(color: Colors.white)),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
+     appBar: AppBar(
+  backgroundColor: const Color(0xFF6C63FF),
+  title: const Text('KYC Verification',
+      style: TextStyle(color: Colors.white)),
+  iconTheme: const IconThemeData(color: Colors.white),
+  actions: const [
+    ThemeToggleButton(),
+    SizedBox(width: 8),
+  ],
+),
       body: Column(
         children: [
           // Progress Bar

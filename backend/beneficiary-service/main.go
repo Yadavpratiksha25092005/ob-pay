@@ -45,6 +45,10 @@ func main() {
 	r.PUT("/api/v1/beneficiaries/:id", UpdateBeneficiary)
 	r.DELETE("/api/v1/beneficiaries/:id", DeleteBeneficiary)
 
-	log.Println("Beneficiary Service starting on port 8014...")
-	log.Fatal(r.Run(":8014"))
+port := os.Getenv("PORT")
+if port == "" {
+    port = "8014"
+}
+log.Println("Beneficiary Service starting on port " + port + "...")
+log.Fatal(r.Run(":" + port))
 }
