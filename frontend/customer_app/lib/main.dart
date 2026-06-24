@@ -8,6 +8,8 @@ import 'premium_home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 
+final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -26,16 +28,32 @@ class OBPayApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'OB Pay',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6C63FF),
-        ),
-        useMaterial3: true,
-      ),
-      home: const SplashScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, mode, child) {
+        return MaterialApp(
+          title: 'OB Pay',
+          debugShowCheckedModeBanner: false,
+          themeMode: mode,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF6C63FF),
+            ),
+            useMaterial3: true,
+            scaffoldBackgroundColor: const Color(0xFFF2F4F7),
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF6C63FF),
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+            scaffoldBackgroundColor: const Color(0xFF0B1437),
+            cardColor: const Color(0xFF111C44),
+          ),
+          home: const SplashScreen(),
+        );
+      },
     );
   }
 }
@@ -105,7 +123,8 @@ class _SplashScreenState extends State<SplashScreen>
                     children: [
                       Text(message.notification?.title ?? 'OB Pay',
                           style: const TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold)),
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
                       Text(message.notification?.body ?? '',
                           style: const TextStyle(
                               color: Colors.white70, fontSize: 12)),
@@ -181,92 +200,87 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: const Color(0xFFF8FAFC),
-    body: FadeTransition(
-      opacity: _fadeAnim,
-      child: Stack(
-        children: [
-          // Blue glass blob top left
-          Positioned(
-            top: -80, left: -80,
-            child: Container(
-              width: 280, height: 280,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF3D5AF1).withOpacity(0.15),
-              ),
-            ),
-          ),
-          // Purple blur circle top right
-          Positioned(
-            top: 60, right: -60,
-            child: Container(
-              width: 200, height: 200,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF9F7AEA).withOpacity(0.12),
-              ),
-            ),
-          ),
-          // Blue blob bottom right
-          Positioned(
-            bottom: -60, right: -40,
-            child: Container(
-              width: 260, height: 260,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF6C63FF).withOpacity(0.12),
-              ),
-            ),
-          ),
-          // Purple blob bottom left
-          Positioned(
-            bottom: 80, left: -60,
-            child: Container(
-              width: 180, height: 180,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF8B5CF6).withOpacity(0.1),
-              ),
-            ),
-          ),
-          // Content
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/images/ob_pay_logo.png',
-                  width: double.infinity,
-                  height: 280,
-                  fit: BoxFit.contain,
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: FadeTransition(
+        opacity: _fadeAnim,
+        child: Stack(
+          children: [
+            Positioned(
+              top: -80, left: -80,
+              child: Container(
+                width: 280, height: 280,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF3D5AF1).withOpacity(0.15),
                 ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Secure. Simple. Bharat.',
-                  style: TextStyle(
-                      color: Color(0xFF4A5568),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.5),
-                ),
-                const SizedBox(height: 80),
-                const Icon(Icons.fingerprint_rounded,
-                    size: 52, color: Color(0xFF6C63FF)),
-                const SizedBox(height: 12),
-                const Text(
-                  'Verifying identity...',
-                  style: TextStyle(
-                      color: Color(0xFF718096), fontSize: 14),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+            Positioned(
+              top: 60, right: -60,
+              child: Container(
+                width: 200, height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF9F7AEA).withOpacity(0.12),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -60, right: -40,
+              child: Container(
+                width: 260, height: 260,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF6C63FF).withOpacity(0.12),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 80, left: -60,
+              child: Container(
+                width: 180, height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                ),
+              ),
+            ),
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/ob_pay_logo.png',
+                    width: double.infinity,
+                    height: 280,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Secure. Simple. Bharat.',
+                    style: TextStyle(
+                        color: Color(0xFF4A5568),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.5),
+                  ),
+                  const SizedBox(height: 80),
+                  const Icon(Icons.fingerprint_rounded,
+                      size: 52, color: Color(0xFF6C63FF)),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Verifying identity...',
+                    style: TextStyle(
+                        color: Color(0xFF718096), fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
-    }

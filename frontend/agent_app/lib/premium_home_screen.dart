@@ -8,6 +8,7 @@ import 'performance_screen.dart';
 import 'customer_screen.dart';
 import 'profile_screen.dart';
 import 'notification_screen.dart';
+import 'main.dart' show themeNotifier;
 
 class PremiumHomeScreen extends StatefulWidget {
   final String userId;
@@ -145,6 +146,38 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 8),
+ValueListenableBuilder<ThemeMode>(
+  valueListenable: themeNotifier,
+  builder: (context, mode, child) {
+    return GestureDetector(
+      onTap: () {
+        themeNotifier.value = mode == ThemeMode.light
+            ? ThemeMode.dark
+            : ThemeMode.light;
+      },
+      child: Container(
+        width: 44, height: 44,
+        decoration: BoxDecoration(
+          color: bgCard,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 8)
+          ],
+        ),
+        child: Icon(
+          mode == ThemeMode.light
+              ? Icons.dark_mode_rounded
+              : Icons.light_mode_rounded,
+          color: textDark,
+          size: 22,
+        ),
+      ),
+    );
+  },
+),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

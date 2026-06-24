@@ -3,6 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'auth_screen.dart';
 
+final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -47,16 +49,32 @@ class _OBPayAgentAppState extends State<OBPayAgentApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'OB Pay Agent',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF00897B),
-        ),
-        useMaterial3: true,
-      ),
-      home: const AuthScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, mode, child) {
+        return MaterialApp(
+          title: 'OB Pay Agent',
+          debugShowCheckedModeBanner: false,
+          themeMode: mode,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF00897B),
+            ),
+            useMaterial3: true,
+            scaffoldBackgroundColor: const Color(0xFFF2F4F7),
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF00897B),
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+            scaffoldBackgroundColor: const Color(0xFF0B1437),
+            cardColor: const Color(0xFF111C44),
+          ),
+          home: const AuthScreen(),
+        );
+      },
     );
   }
 }

@@ -1,10 +1,10 @@
-FROM golang:1.23 AS builder
+FROM golang:latest AS builder
 ENV GOTOOLCHAIN=auto
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 ENV GOARCH=amd64
 WORKDIR /app
-COPY backend/beneficiary-service/ .
+COPY . .
 RUN go mod tidy
 RUN go build -o main .
 

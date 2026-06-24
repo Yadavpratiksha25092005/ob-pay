@@ -14,6 +14,7 @@ import 'notification_screen.dart';
 import 'settings_screen.dart';
 import 'rewards_screen.dart';
 import 'contacts_screen.dart';
+import 'main.dart' show themeNotifier;
 
 class PremiumHomeScreen extends StatefulWidget {
   final String userId;
@@ -229,108 +230,142 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
   }
 
   Widget _buildAppBar() {
-    return FadeInDown(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-        child: Row(
-          children: [
-            GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(
-                  builder: (_) => ProfileScreen(
-                        userId: widget.userId,
-                        userName: widget.userName,
-                        phone: '',
-                      ))),
-              child: Container(
-                width: 44, height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6C63FF), Color(0xFF3D5AF1)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF6C63FF).withOpacity(0.3),
-                      blurRadius: 10,
-                    ),
-                  ],
+  return FadeInDown(
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.push(context, MaterialPageRoute(
+                builder: (_) => ProfileScreen(
+                      userId: widget.userId,
+                      userName: widget.userName,
+                      phone: '',
+                    ))),
+            child: Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6C63FF), Color(0xFF3D5AF1)],
                 ),
-                child: const Icon(Icons.person, color: Colors.white, size: 22),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('$greeting 👋',
-                      style: const TextStyle(color: Colors.black54, fontSize: 12)),
-                  Text(widget.userName,
-                      style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold)),
-                ],
-              ),
-            ),
-            GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(
-                  builder: (_) => NotificationScreen(userId: widget.userId))),
-              child: Stack(
-                children: [
-                  Container(
-                    width: 44, height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.notifications_outlined,
-                        color: Colors.black87, size: 22),
-                  ),
-                  Positioned(
-                    top: 8, right: 8,
-                    child: Container(
-                      width: 8, height: 8,
-                      decoration: const BoxDecoration(
-                          color: Colors.red, shape: BoxShape.circle),
-                    ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF6C63FF).withOpacity(0.3),
+                    blurRadius: 10,
                   ),
                 ],
               ),
+              child: const Icon(Icons.person, color: Colors.white, size: 22),
             ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(
-                  builder: (_) => SettingsScreen(userId: widget.userId))),
-              child: Container(
-                width: 44, height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('$greeting 👋',
+                    style: const TextStyle(color: Colors.black54, fontSize: 12)),
+                Text(widget.userName,
+                    style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () => Navigator.push(context, MaterialPageRoute(
+                builder: (_) => NotificationScreen(userId: widget.userId))),
+            child: Stack(
+              children: [
+                Container(
+                  width: 44, height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.notifications_outlined,
+                      color: Colors.black87, size: 22),
                 ),
-                child: const Icon(Icons.settings_outlined,
-                    color: Colors.black87, size: 22),
-              ),
+                Positioned(
+                  top: 8, right: 8,
+                  child: Container(
+                    width: 8, height: 8,
+                    decoration: const BoxDecoration(
+                        color: Colors.red, shape: BoxShape.circle),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () => Navigator.push(context, MaterialPageRoute(
+                builder: (_) => SettingsScreen(userId: widget.userId))),
+            child: Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.settings_outlined,
+                  color: Colors.black87, size: 22),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: themeNotifier,
+            builder: (context, mode, child) {
+              return GestureDetector(
+                onTap: () {
+                  themeNotifier.value = mode == ThemeMode.light
+                      ? ThemeMode.dark
+                      : ThemeMode.light;
+                },
+                child: Container(
+                  width: 44, height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    mode == ThemeMode.light
+                        ? Icons.dark_mode_rounded
+                        : Icons.light_mode_rounded,
+                    color: Colors.black87,
+                    size: 22,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildWalletCard() {
     return FadeInDown(

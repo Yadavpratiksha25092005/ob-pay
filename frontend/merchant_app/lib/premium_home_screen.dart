@@ -14,6 +14,7 @@ import 'add_money_screen.dart';
 import 'support_screen.dart';
 import 'settings_screen.dart';
 import 'kyc_screen.dart';
+import 'main.dart' show themeNotifier;
 
 class PremiumHomeScreen extends StatefulWidget {
   final String userId;
@@ -293,6 +294,34 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
               ),
             ),
           ),
+          const SizedBox(width: 8),
+ValueListenableBuilder<ThemeMode>(
+  valueListenable: themeNotifier,
+  builder: (context, mode, child) {
+    return GestureDetector(
+      onTap: () {
+        themeNotifier.value = mode == ThemeMode.light
+            ? ThemeMode.dark
+            : ThemeMode.light;
+      },
+      child: Container(
+        width: 40, height: 40,
+        decoration: BoxDecoration(
+          color: bgPage,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Icon(
+          mode == ThemeMode.light
+              ? Icons.dark_mode_rounded
+              : Icons.light_mode_rounded,
+          color: textDark,
+          size: 20,
+        ),
+      ),
+    );
+  },
+),
           const SizedBox(width: 12),
           GestureDetector(
             onTap: () => Navigator.push(
