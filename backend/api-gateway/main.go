@@ -134,6 +134,17 @@ func main() {
 			proxyRequest(c, getServiceURL("ANALYTICS_SERVICE_URL", "http://localhost:8013")+"/api/v1/analytics/admin/overview")
 		})
 
+		// KYC routes
+		public.POST("/kyc/submit", func(c *gin.Context) {
+			proxyRequest(c, getServiceURL("KYC_SERVICE_URL", "http://localhost:8006")+"/api/v1/kyc/submit")
+		})
+		public.GET("/kyc/status/:user_id", func(c *gin.Context) {
+			proxyRequest(c, getServiceURL("KYC_SERVICE_URL", "http://localhost:8006")+"/api/v1/kyc/status/"+c.Param("user_id"))
+		})
+		public.PUT("/kyc/verify", func(c *gin.Context) {
+			proxyRequest(c, getServiceURL("KYC_SERVICE_URL", "http://localhost:8006")+"/api/v1/kyc/verify")
+		})
+
 		// Beneficiary routes
 		public.POST("/beneficiaries", func(c *gin.Context) {
 			proxyRequest(c, getServiceURL("BENEFICIARY_SERVICE_URL", "http://localhost:8014")+"/api/v1/beneficiaries")

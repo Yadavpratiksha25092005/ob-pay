@@ -12,7 +12,6 @@ import 'kyc_screen.dart';
 import 'qr_scanner_screen.dart';
 import 'notification_screen.dart';
 import 'settings_screen.dart';
-import 'rewards_screen.dart';
 import 'contacts_screen.dart';
 import 'main.dart' show themeNotifier;
 
@@ -141,8 +140,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
                 _navItem(0, Icons.home_rounded, 'Home'),
                 _navItem(1, Icons.receipt_long_rounded, 'Transactions'),
                 _scanButton2(),
-                _navItem(3, Icons.star_rounded, 'Rewards'),
-                _navItem(4, Icons.person_rounded, 'Profile'),
+                _navItem(3, Icons.person_rounded, 'Profile'),
               ],
             ),
           ),
@@ -160,9 +158,6 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
           Navigator.push(context, MaterialPageRoute(
               builder: (_) => HistoryScreen(userId: widget.userId)));
         } else if (index == 3) {
-          Navigator.push(context, MaterialPageRoute(
-              builder: (_) => RewardsScreen(userId: widget.userId)));
-        } else if (index == 4) {
           Navigator.push(context, MaterialPageRoute(
               builder: (_) => ProfileScreen(
                     userId: widget.userId,
@@ -306,61 +301,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(
-                builder: (_) => SettingsScreen(userId: widget.userId))),
-            child: Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.settings_outlined,
-                  color: Colors.black87, size: 22),
-            ),
-          ),
-          const SizedBox(width: 8),
-          ValueListenableBuilder<ThemeMode>(
-            valueListenable: themeNotifier,
-            builder: (context, mode, child) {
-              return GestureDetector(
-                onTap: () {
-                  themeNotifier.value = mode == ThemeMode.light
-                      ? ThemeMode.dark
-                      : ThemeMode.light;
-                },
-                child: Container(
-                  width: 44, height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    mode == ThemeMode.light
-                        ? Icons.dark_mode_rounded
-                        : Icons.light_mode_rounded,
-                    color: Colors.black87,
-                    size: 22,
-                  ),
-                ),
-              );
-            },
-          ),
+         
         ],
       ),
     ),
@@ -965,12 +906,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
               children: [
                 const Text('Offers & Rewards',
                     style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
-                GestureDetector(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => RewardsScreen(userId: widget.userId))),
-                  child: const Text('View All',
-                      style: TextStyle(color: Color(0xFF6C63FF), fontSize: 13, fontWeight: FontWeight.w500)),
-                ),
+                const SizedBox(),
               ],
             ),
             const SizedBox(height: 14),

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'auth_screen.dart';
 import 'kyc_screen.dart';
+import 'api_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userId;
@@ -29,8 +31,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
   static const Color textLight = Color(0xFF718096);
 
   String email = 'user@obpay.com';
+  String _kycStatus = 'pending';
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadKycStatus();
+  }
+
+  Future<void> _loadKycStatus() async {
+    final status = await ApiService.getKycStatus(widget.userId);
+    if (mounted) setState(() => _kycStatus = status);
+  }
+
+  Widget _kycBadge() {
+    final Color color;
+    final String label;
+    switch (_kycStatus) {
+      case 'approved':
+        color = Colors.green;
+        label = 'Approved';
+        break;
+      case 'rejected':
+        color = Colors.red;
+        label = 'Rejected';
+        break;
+      default:
+        color = Colors.orange;
+        label = 'Pending';
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(label,
+          style: TextStyle(
+              color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+    );
+  }
 
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
@@ -253,41 +295,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 bg: const Color(0xFFE0F7FA),
                 title: 'KYC & Verification',
                 subtitle: 'View your KYC status',
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text('Pending',
-                      style: TextStyle(
-                          color: Colors.orange,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold)),
-                ),
+                trailing: _kycBadge(),
                 onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (_) => KYCScreen(userId: widget.userId))),
-              ),
-              _divider(),
-              _navTile(
-                icon: Icons.payment_rounded,
-                color: const Color(0xFF9F7AEA),
-                bg: const Color(0xFFF3E5F5),
-                title: 'Payment Limits',
-                subtitle: 'View and manage your limits',
-                onTap: () {},
-              ),
-              _divider(),
-              _navTile(
-                icon: Icons.people_rounded,
-                color: const Color(0xFFE91E63),
-                bg: const Color(0xFFFCE4EC),
-                title: 'Refer & Earn',
-                subtitle: 'Invite friends and earn rewards',
-                onTap: () {},
               ),
             ]),
 
@@ -327,8 +339,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: const Color(0xFFFFD700),
                 bg: const Color(0xFFFFFDE7),
                 title: 'Rate Us',
-                subtitle: 'Share your experience',
-                onTap: () {},
+                subtitle: 'Share your experience on Play Store',
+                onTap: () async {
+                  const playStoreUrl =
+                      'https://play.google.com/store/apps/details?id=com.obpay.app';
+                  final uri = Uri.parse(playStoreUrl);
+                  final messenger = ScaffoldMessenger.of(context);
+                  final launched = await canLaunchUrl(uri);
+                  if (launched) {
+                    await launchUrl(uri,
+                        mode: LaunchMode.externalApplication);
+                  } else {
+                    messenger.showSnackBar(
+                      const SnackBar(
+                          content: Text(
+                              'Could not open Play Store. Please search for OB Pay manually.')),
+                    );
+                  }
+                },
               ),
             ]),
 
@@ -562,22 +590,60 @@ void _showSupport() {
             const Text('Help & Support',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
-            _supportTile(Icons.email_rounded, const Color(0xFFED8936),
-                'Email Support', 'support@obpay.com'),
-            _supportTile(Icons.phone_rounded, const Color(0xFF00897B),
-                'Call Support', 'Coming Soon'),
-            _supportTile(Icons.chat_rounded, const Color(0xFF3D5AF1),
-                'Live Chat', 'Coming Soon'),
-            _supportTile(Icons.help_center_rounded, const Color(0xFF9F7AEA),
-                'FAQs', 'Browse frequently asked questions'),
+            _supportTile(
+              Icons.help_center_rounded,
+              const Color(0xFF6C63FF),
+              'Help Center',
+              'Browse guides and tutorials',
+              onTap: () async {
+                final uri = Uri.parse('https://obpay.in/help');
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              },
+            ),
+            _supportTile(
+              Icons.email_rounded,
+              const Color(0xFFED8936),
+              'Contact Support',
+              'support@obpay.com',
+              onTap: () async {
+                final uri = Uri.parse('mailto:support@obpay.com?subject=OB Pay Support');
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri);
+                }
+              },
+            ),
+            _supportTile(
+              Icons.phone_rounded,
+              const Color(0xFF00897B),
+              'Call Support',
+              '+91 1800-XXX-XXXX (Toll Free)',
+              onTap: () async {
+                final uri = Uri.parse('tel:+911800000000');
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri);
+                }
+              },
+            ),
+            _supportTile(
+              Icons.quiz_rounded,
+              const Color(0xFF009688),
+              'FAQs',
+              'Frequently asked questions',
+              onTap: () {},
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _supportTile(IconData icon, Color color, String title, String subtitle) {
-    return Container(
+  Widget _supportTile(IconData icon, Color color, String title, String subtitle,
+      {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -590,7 +656,7 @@ void _showSupport() {
           Container(
             width: 40, height: 40,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: color, size: 20),
@@ -612,6 +678,7 @@ void _showSupport() {
           ),
         ],
       ),
+    ),
     );
   }
 

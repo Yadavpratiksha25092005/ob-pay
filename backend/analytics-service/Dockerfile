@@ -4,7 +4,11 @@ ENV CGO_ENABLED=0
 ENV GOOS=linux
 ENV GOARCH=amd64
 WORKDIR /app
+<<<<<<< HEAD
 COPY . .
+=======
+COPY backend/analytics-service/ .
+>>>>>>> 25f3fbd (Update Dockerfile)
 RUN go mod tidy
 RUN go build -o main .
 

@@ -16,6 +16,9 @@ class _HistoryScreenState extends State<HistoryScreen>
   bool isLoading = true;
   String selectedTab = 'All';
   late TabController _tabController;
+  String _searchQuery = '';
+  bool _showSearch = false;
+  final TextEditingController _searchController = TextEditingController();
 
   final List<String> tabs = ['All', 'Received', 'Sent', 'Paid Bills', 'Recharge'];
 
@@ -35,7 +38,20 @@ class _HistoryScreenState extends State<HistoryScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  List<dynamic> _applySearch(List<dynamic> list) {
+    if (_searchQuery.isEmpty) return list;
+    final q = _searchQuery.toLowerCase();
+    return list.where((p) {
+      final id = (p['id'] ?? '').toString().toLowerCase();
+      final desc = (p['description'] ?? '').toString().toLowerCase();
+      final amount = (p['amount'] ?? '').toString().toLowerCase();
+      final date = _formatTime(p['created_at']).toLowerCase();
+      return id.contains(q) || desc.contains(q) || amount.contains(q) || date.contains(q);
+    }).toList();
   }
 
   Future<void> loadHistory() async {
@@ -88,15 +104,38 @@ class _HistoryScreenState extends State<HistoryScreen>
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Transactions',
-            style: TextStyle(
-                color: Colors.black87,
-                fontSize: 18,
-                fontWeight: FontWeight.bold)),
+        title: _showSearch
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Search by ID, amount, description, date...',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.black38, fontSize: 14),
+                ),
+                style: const TextStyle(color: Colors.black87, fontSize: 15),
+                onChanged: (v) => setState(() => _searchQuery = v),
+              )
+            : const Text('Transactions',
+                style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search_rounded, color: Colors.black87),
-            onPressed: () {},
+            icon: Icon(
+              _showSearch ? Icons.close_rounded : Icons.search_rounded,
+              color: Colors.black87,
+            ),
+            onPressed: () {
+              setState(() {
+                _showSearch = !_showSearch;
+                if (!_showSearch) {
+                  _searchQuery = '';
+                  _searchController.clear();
+                }
+              });
+            },
           ),
           IconButton(
             icon: const Icon(Icons.filter_list_rounded, color: Colors.black87),
@@ -138,15 +177,16 @@ class _HistoryScreenState extends State<HistoryScreen>
   }
 
 Widget _buildAllTransactions() {
-  if (payments.isEmpty && dummyBills.isEmpty) return _buildEmpty();
+  final filtered = _applySearch(payments);
+  if (filtered.isEmpty && dummyBills.isEmpty) return _buildEmpty();
 
   return ListView(
     padding: const EdgeInsets.all(16),
     children: [
       // Real payments
-      if (payments.isNotEmpty) ...[
+      if (filtered.isNotEmpty) ...[
         _groupHeader('Payments'),
-        ...payments.map((p) {
+        ...filtered.map((p) {
           final isSender = p['sender_user_id'] == widget.userId;
           return _transactionCard({
             'name': isSender ? 'Money Sent' : 'Money Received',
@@ -213,12 +253,13 @@ Widget _groupHeader(String title) {
 }
 
 Widget _buildPaymentsList(List<dynamic> list, {required bool isReceived}) {
-  if (list.isEmpty) return _buildEmpty();
+  final filtered = _applySearch(list);
+  if (filtered.isEmpty) return _buildEmpty();
   return ListView.builder(
     padding: const EdgeInsets.all(16),
-    itemCount: list.length,
+    itemCount: filtered.length,
     itemBuilder: (context, index) {
-      final p = list[index];
+      final p = filtered[index];
       final desc = p['description']?.toString() ?? '';
       return _transactionCard({
         'name': isReceived ? 'Money Received' : 'Money Sent',

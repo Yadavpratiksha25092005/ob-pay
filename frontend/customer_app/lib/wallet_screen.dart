@@ -25,7 +25,6 @@ class _WalletScreenState extends State<WalletScreen>
   bool isSuccess = false;
   String? errorMessage;
   String? paymentId;
-  List<dynamic> _contacts = [];
 
   late AnimationController _checkController;
   late AnimationController _scaleController;
@@ -38,7 +37,6 @@ class _WalletScreenState extends State<WalletScreen>
   void initState() {
     super.initState();
     phoneController = TextEditingController(text: widget.receiverPhone ?? '');
-    _loadContacts();
     _checkController = AnimationController(
         duration: const Duration(milliseconds: 800), vsync: this);
     _scaleController = AnimationController(
@@ -47,11 +45,6 @@ class _WalletScreenState extends State<WalletScreen>
         CurvedAnimation(parent: _checkController, curve: Curves.easeOutBack);
     _scaleAnimation =
         CurvedAnimation(parent: _scaleController, curve: Curves.easeOutBack);
-  }
-
-  Future<void> _loadContacts() async {
-    final data = await ApiService.getBeneficiaries(widget.userId);
-    if (mounted) setState(() => _contacts = data);
   }
 
   @override
@@ -234,67 +227,6 @@ class _WalletScreenState extends State<WalletScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Quick contacts row
-                if (_contacts.isNotEmpty) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Quick Send',
-                          style: TextStyle(
-                              color: Colors.black87,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 72,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _contacts.length,
-                      itemBuilder: (_, i) {
-                        final c = _contacts[i];
-                        final name = (c['nickname'] ?? c['name'] ?? '') as String;
-                        final phone = (c['phone'] ?? '') as String;
-                        final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
-                        const colors = [
-                          Color(0xFF6C63FF), Color(0xFF43C6AC), Color(0xFFFF6584),
-                          Color(0xFFFFA630), Color(0xFF4FC3F7),
-                        ];
-                        final color = colors[name.codeUnitAt(0) % colors.length];
-                        return GestureDetector(
-                          onTap: () => setState(() => phoneController.text = phone),
-                          child: Container(
-                            width: 60,
-                            margin: const EdgeInsets.only(right: 12),
-                            child: Column(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: color,
-                                  radius: 22,
-                                  child: Text(initial,
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16)),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  name.length > 7 ? '${name.substring(0, 7)}…' : name,
-                                  style: const TextStyle(fontSize: 10, color: Color(0xFF718096)),
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
                 // Receiver input
                 const Text('Enter Receiver Details',
                     style: TextStyle(
