@@ -4,7 +4,7 @@ ENV CGO_ENABLED=0
 ENV GOOS=linux
 ENV GOARCH=amd64
 WORKDIR /app
-COPY backend/rewards-service/ .
+COPY . .
 RUN go mod tidy
 RUN go build -o main .
 
