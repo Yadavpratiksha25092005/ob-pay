@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'main.dart' show themeNotifier;
 
 class AgentNotificationScreen extends StatefulWidget {
   final String userId;
@@ -13,10 +14,20 @@ class AgentNotificationScreen extends StatefulWidget {
 class _AgentNotificationScreenState
     extends State<AgentNotificationScreen> {
   static const Color green = Color(0xFF00897B);
-  static const Color bgPage = Color(0xFFF5F5F5);
-  static const Color bgCard = Color(0xFFFFFFFF);
-  static const Color textDark = Color(0xFF1A202C);
-  static const Color textLight = Color(0xFF718096);
+  Color bgPage = const Color(0xFFF5F5F5);
+  Color bgCard = Colors.white;
+  Color textDark = const Color(0xFF1A202C);
+  Color textLight = const Color(0xFF718096);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    bgPage = isDark ? const Color(0xFF0B1437) : const Color(0xFFF5F5F5);
+    bgCard = isDark ? const Color(0xFF111C44) : Colors.white;
+    textDark = isDark ? Colors.white : const Color(0xFF1A202C);
+    textLight = isDark ? Colors.white60 : const Color(0xFF718096);
+  }
 
   final List<Map<String, dynamic>> notifications = [
     {'title': 'Cash In Successful!', 'message': '₹2,000 Cash In for Rahul Kumar completed.', 'time': '10:30 AM', 'isRead': false, 'icon': Icons.arrow_downward_rounded, 'color': Color(0xFF00897B), 'bg': Color(0xFFE0F2F1)},
@@ -86,6 +97,18 @@ class _AgentNotificationScreenState
           ],
         ),
         actions: [
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: themeNotifier,
+            builder: (_, mode, __) => IconButton(
+              icon: Icon(
+                mode == ThemeMode.light ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+              ),
+              onPressed: () {
+                themeNotifier.value = mode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+              },
+              tooltip: mode == ThemeMode.light ? 'Dark mode' : 'Light mode',
+            ),
+          ),
           if (unreadCount > 0)
             TextButton(
               onPressed: markAllRead,
@@ -175,7 +198,7 @@ class _AgentNotificationScreenState
           children: [
             const SizedBox(height: 4),
             Text(n['message'] as String,
-                style: const TextStyle(
+                style: TextStyle(
                     color: textLight, fontSize: 12),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis),

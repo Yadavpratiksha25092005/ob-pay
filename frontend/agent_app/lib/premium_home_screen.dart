@@ -8,6 +8,7 @@ import 'performance_screen.dart';
 import 'customer_screen.dart';
 import 'profile_screen.dart';
 import 'notification_screen.dart';
+import 'agent_qr_screen.dart';
 import 'main.dart' show themeNotifier;
 
 class PremiumHomeScreen extends StatefulWidget {
@@ -36,10 +37,10 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> {
 
   static const Color green = Color(0xFF00897B);
   static const Color darkGreen = Color(0xFF004D40);
-  static const Color bgPage = Color(0xFFF5F5F5);
-  static const Color bgCard = Color(0xFFFFFFFF);
-  static const Color textDark = Color(0xFF1A202C);
-  static const Color textLight = Color(0xFF718096);
+  Color bgPage = const Color(0xFFF5F5F5);
+  Color bgCard = Colors.white;
+  Color textDark = const Color(0xFF1A202C);
+  Color textLight = const Color(0xFF718096);
 
   @override
   void initState() {
@@ -49,6 +50,16 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen> {
       statusBarIconBrightness: Brightness.dark,
     ));
     loadData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    bgPage = isDark ? const Color(0xFF0B1437) : const Color(0xFFF5F5F5);
+    bgCard = isDark ? const Color(0xFF111C44) : Colors.white;
+    textDark = isDark ? Colors.white : const Color(0xFF1A202C);
+    textLight = isDark ? Colors.white60 : const Color(0xFF718096);
   }
 
   Future<void> loadData() async {
@@ -184,10 +195,10 @@ ValueListenableBuilder<ThemeMode>(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('$greeting 👋',
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: textLight, fontSize: 12)),
                 Text(widget.userName,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: textDark,
                         fontSize: 17,
                         fontWeight: FontWeight.bold)),
@@ -212,7 +223,7 @@ ValueListenableBuilder<ThemeMode>(
                           blurRadius: 8)
                     ],
                   ),
-                  child: const Icon(Icons.notifications_outlined,
+                  child: Icon(Icons.notifications_outlined,
                       color: textDark, size: 22),
                 ),
                 Positioned(
@@ -410,7 +421,7 @@ ValueListenableBuilder<ThemeMode>(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(s['title'] as String,
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: textLight, fontSize: 11)),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -460,7 +471,7 @@ ValueListenableBuilder<ThemeMode>(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Quick Actions',
+          Text('Quick Actions',
               style: TextStyle(
                   color: textDark,
                   fontSize: 16,
@@ -503,6 +514,13 @@ ValueListenableBuilder<ThemeMode>(
                     Navigator.push(context, MaterialPageRoute(
                         builder: (_) => CustomerScreen(
                               agentId: widget.userId)));
+                  } else if (label == 'My QR') {
+                    Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => AgentQRScreen(
+                              userId: widget.userId,
+                              userName: widget.userName,
+                              phone: widget.phone,
+                            )));
                   }
                 },
                 child: Container(
@@ -530,7 +548,7 @@ ValueListenableBuilder<ThemeMode>(
                       const SizedBox(height: 8),
                       Text(action['label'] as String,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                               color: textDark,
                               fontSize: 11,
                               fontWeight: FontWeight.w500)),
@@ -643,7 +661,7 @@ ValueListenableBuilder<ThemeMode>(
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Recent Transactions',
+              Text('Recent Transactions',
                   style: TextStyle(
                       color: textDark,
                       fontSize: 16,
@@ -700,12 +718,12 @@ ValueListenableBuilder<ThemeMode>(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(tx['name'] as String,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     color: textDark,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 14)),
                             Text(tx['type'] as String,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     color: textLight, fontSize: 12)),
                           ],
                         ),
@@ -719,7 +737,7 @@ ValueListenableBuilder<ThemeMode>(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15)),
                           Text(tx['time'] as String,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   color: textLight, fontSize: 11)),
                         ],
                       ),
@@ -750,11 +768,11 @@ ValueListenableBuilder<ThemeMode>(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                Icon(Icons.flag_rounded,
+                const Icon(Icons.flag_rounded,
                     color: Color(0xFF00897B), size: 20),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Text('Monthly Target',
                     style: TextStyle(
                         color: textDark,
@@ -766,9 +784,9 @@ ValueListenableBuilder<ThemeMode>(
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Collections',
+                Text('Collections',
                     style: TextStyle(color: textLight, fontSize: 13)),
-                const Text('₹14,200 / ₹50,000',
+                Text('₹14,200 / ₹50,000',
                     style: TextStyle(
                         color: textDark,
                         fontSize: 13,
@@ -787,15 +805,15 @@ ValueListenableBuilder<ThemeMode>(
               ),
             ),
             const SizedBox(height: 4),
-            const Text('28.4% completed — Keep going! 💪',
+            Text('28.4% completed — Keep going! 💪',
                 style: TextStyle(color: textLight, fontSize: 11)),
             const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Customers',
+                Text('Customers',
                     style: TextStyle(color: textLight, fontSize: 13)),
-                const Text('28 / 100',
+                Text('28 / 100',
                     style: TextStyle(
                         color: textDark,
                         fontSize: 13,
@@ -814,7 +832,7 @@ ValueListenableBuilder<ThemeMode>(
               ),
             ),
             const SizedBox(height: 4),
-            const Text('28% completed — 72 more to go!',
+            Text('28% completed — 72 more to go!',
                 style: TextStyle(color: textLight, fontSize: 11)),
           ],
         ),

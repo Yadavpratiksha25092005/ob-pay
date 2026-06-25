@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'auth_screen.dart';
+import 'main.dart' show themeNotifier;
 
 class AgentProfileScreen extends StatefulWidget {
   final String userId;
@@ -22,14 +23,24 @@ class AgentProfileScreen extends StatefulWidget {
 class _AgentProfileScreenState extends State<AgentProfileScreen> {
   static const Color green = Color(0xFF00897B);
   static const Color darkGreen = Color(0xFF004D40);
-  static const Color bgPage = Color(0xFFF5F5F5);
-  static const Color bgCard = Color(0xFFFFFFFF);
-  static const Color textDark = Color(0xFF1A202C);
-  static const Color textLight = Color(0xFF718096);
+  Color bgPage = const Color(0xFFF5F5F5);
+  Color bgCard = Colors.white;
+  Color textDark = const Color(0xFF1A202C);
+  Color textLight = const Color(0xFF718096);
 
   String email = 'agent@obpay.com';
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    bgPage = isDark ? const Color(0xFF0B1437) : const Color(0xFFF5F5F5);
+    bgCard = isDark ? const Color(0xFF111C44) : Colors.white;
+    textDark = isDark ? Colors.white : const Color(0xFF1A202C);
+    textLight = isDark ? Colors.white60 : const Color(0xFF718096);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +59,18 @@ class _AgentProfileScreenState extends State<AgentProfileScreen> {
                 fontSize: 18,
                 fontWeight: FontWeight.bold)),
         actions: [
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: themeNotifier,
+            builder: (_, mode, __) => IconButton(
+              icon: Icon(
+                mode == ThemeMode.light ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+              ),
+              onPressed: () {
+                themeNotifier.value = mode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+              },
+              tooltip: mode == ThemeMode.light ? 'Dark mode' : 'Light mode',
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.settings_outlined, color: Color(0xFF00897B)),
             onPressed: () {},
@@ -648,12 +671,12 @@ void _showSupport() {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: textDark,
                         fontSize: 14,
                         fontWeight: FontWeight.w500)),
                 Text(subtitle,
-                    style: const TextStyle(color: textLight, fontSize: 12)),
+                    style: TextStyle(color: textLight, fontSize: 12)),
               ],
             ),
           ),
@@ -688,12 +711,12 @@ void _showSupport() {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: textDark,
                         fontWeight: FontWeight.w500,
                         fontSize: 14)),
                 Text(subtitle,
-                    style: const TextStyle(color: textLight, fontSize: 12)),
+                    style: TextStyle(color: textLight, fontSize: 12)),
               ],
             ),
           ),
@@ -708,10 +731,10 @@ void _showSupport() {
         Icon(icon, color: green, size: 20),
         const SizedBox(height: 6),
         Text(value,
-            style: const TextStyle(
+            style: TextStyle(
                 color: textDark, fontSize: 14, fontWeight: FontWeight.bold)),
         Text(label,
-            style: const TextStyle(color: textLight, fontSize: 10)),
+            style: TextStyle(color: textLight, fontSize: 10)),
       ],
     );
   }
@@ -745,7 +768,7 @@ void _showSupport() {
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(title,
-            style: const TextStyle(
+            style: TextStyle(
                 color: textDark, fontSize: 15, fontWeight: FontWeight.bold)),
       ),
     );
@@ -801,7 +824,7 @@ void _showSupport() {
                           fontSize: 14,
                           fontWeight: FontWeight.w500)),
                   Text(subtitle,
-                      style: const TextStyle(color: textLight, fontSize: 12)),
+                      style: TextStyle(color: textLight, fontSize: 12)),
                 ],
               ),
             ),

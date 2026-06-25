@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'main.dart' show themeNotifier;
 
 class CustomerScreen extends StatefulWidget {
   final String agentId;
@@ -12,10 +13,10 @@ class CustomerScreen extends StatefulWidget {
 class _CustomerScreenState extends State<CustomerScreen>
     with SingleTickerProviderStateMixin {
   static const Color green = Color(0xFF00897B);
-  static const Color bgPage = Color(0xFFF5F5F5);
-  static const Color bgCard = Color(0xFFFFFFFF);
-  static const Color textDark = Color(0xFF1A202C);
-  static const Color textLight = Color(0xFF718096);
+  Color bgPage = const Color(0xFFF5F5F5);
+  Color bgCard = Colors.white;
+  Color textDark = const Color(0xFF1A202C);
+  Color textLight = const Color(0xFF718096);
 
   late TabController _tabController;
   bool isLoading = false;
@@ -58,6 +59,16 @@ class _CustomerScreenState extends State<CustomerScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    bgPage = isDark ? const Color(0xFF0B1437) : const Color(0xFFF5F5F5);
+    bgCard = isDark ? const Color(0xFF111C44) : Colors.white;
+    textDark = isDark ? Colors.white : const Color(0xFF1A202C);
+    textLight = isDark ? Colors.white60 : const Color(0xFF718096);
+  }
+
+  @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
@@ -80,6 +91,18 @@ class _CustomerScreenState extends State<CustomerScreen>
                 fontSize: 18,
                 fontWeight: FontWeight.bold)),
         actions: [
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: themeNotifier,
+            builder: (_, mode, __) => IconButton(
+              icon: Icon(
+                mode == ThemeMode.light ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+              ),
+              onPressed: () {
+                themeNotifier.value = mode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+              },
+              tooltip: mode == ThemeMode.light ? 'Dark mode' : 'Light mode',
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.search_rounded, color: Color(0xFF1A202C)),
             onPressed: () {},
@@ -167,14 +190,14 @@ class _CustomerScreenState extends State<CustomerScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(c['name'] as String,
-                          style: const TextStyle(
+                          style: TextStyle(
                               color: textDark,
                               fontWeight: FontWeight.w600,
                               fontSize: 14)),
                       Row(
                         children: [
                           Text(c['phone'] as String,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   color: textLight, fontSize: 12)),
                           const SizedBox(width: 6),
                           Container(
@@ -217,7 +240,7 @@ class _CustomerScreenState extends State<CustomerScreen>
                     ),
                     const SizedBox(height: 4),
                     Text('${c['transactions']} txns',
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: textLight, fontSize: 11)),
                   ],
                 ),
@@ -307,7 +330,7 @@ class _CustomerScreenState extends State<CustomerScreen>
           const SizedBox(height: 20),
 
           // Business Type
-          const Text('Business Type',
+          Text('Business Type',
               style: TextStyle(color: textLight, fontSize: 12, fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           Container(
@@ -455,14 +478,14 @@ class _CustomerScreenState extends State<CustomerScreen>
             const SizedBox(height: 24),
             Text(title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: textDark)),
             const SizedBox(height: 8),
             Text(message,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: textLight, fontSize: 13)),
+                style: TextStyle(color: textLight, fontSize: 13)),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: onReset,
@@ -559,7 +582,7 @@ class _CustomerScreenState extends State<CustomerScreen>
               style: TextStyle(
                   color: color, fontSize: 20, fontWeight: FontWeight.bold)),
           Text(label,
-              style: const TextStyle(color: textLight, fontSize: 10)),
+              style: TextStyle(color: textLight, fontSize: 10)),
         ],
       ),
     );
@@ -577,7 +600,7 @@ class _CustomerScreenState extends State<CustomerScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(
+            style: TextStyle(
                 color: textLight, fontSize: 12, fontWeight: FontWeight.w500)),
         const SizedBox(height: 6),
         Container(

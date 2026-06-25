@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'main.dart' show themeNotifier;
 
 class PerformanceScreen extends StatefulWidget {
   final String userId;
@@ -18,10 +19,20 @@ class PerformanceScreen extends StatefulWidget {
 class _PerformanceScreenState extends State<PerformanceScreen> {
   static const Color green = Color(0xFF00897B);
   static const Color darkGreen = Color(0xFF004D40);
-  static const Color bgPage = Color(0xFFF5F5F5);
-  static const Color bgCard = Color(0xFFFFFFFF);
-  static const Color textDark = Color(0xFF1A202C);
-  static const Color textLight = Color(0xFF718096);
+  Color bgPage = const Color(0xFFF5F5F5);
+  Color bgCard = Colors.white;
+  Color textDark = const Color(0xFF1A202C);
+  Color textLight = const Color(0xFF718096);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    bgPage = isDark ? const Color(0xFF0B1437) : const Color(0xFFF5F5F5);
+    bgCard = isDark ? const Color(0xFF111C44) : Colors.white;
+    textDark = isDark ? Colors.white : const Color(0xFF1A202C);
+    textLight = isDark ? Colors.white60 : const Color(0xFF718096);
+  }
 
   String selectedPeriod = 'This Month';
 
@@ -67,6 +78,20 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                 color: Color(0xFF1A202C),
                 fontSize: 18,
                 fontWeight: FontWeight.bold)),
+        actions: [
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: themeNotifier,
+            builder: (_, mode, __) => IconButton(
+              icon: Icon(
+                mode == ThemeMode.light ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+              ),
+              onPressed: () {
+                themeNotifier.value = mode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+              },
+              tooltip: mode == ThemeMode.light ? 'Dark mode' : 'Light mode',
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -236,7 +261,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Collection Trend',
+                  Text('Collection Trend',
                       style: TextStyle(
                           color: textDark,
                           fontSize: 16,
@@ -271,7 +296,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 6),
                                   child: Text(labels[idx],
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                           fontSize: 10,
                                           color: textLight)),
                                 );
@@ -325,7 +350,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
             const SizedBox(height: 16),
 
             // Badges
-            const Text('Achievement Badges',
+            Text('Achievement Badges',
                 style: TextStyle(
                     color: textDark,
                     fontSize: 16,
@@ -403,11 +428,11 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.leaderboard_rounded,
+                      const Icon(Icons.leaderboard_rounded,
                           color: Color(0xFF00897B), size: 20),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text('Leaderboard',
                           style: TextStyle(
                               color: textDark,
@@ -470,7 +495,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                                       fontSize: 14),
                                 ),
                                 Text('Score: ${entry['score']}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         color: textLight,
                                         fontSize: 12)),
                               ],
@@ -480,7 +505,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(entry['amount'] as String,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       color: textDark,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14)),
@@ -526,7 +551,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Commission Tracker',
+                  Text('Commission Tracker',
                       style: TextStyle(
                           color: textDark,
                           fontSize: 16,
@@ -540,7 +565,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Total Commission',
+                      Text('Total Commission',
                           style: TextStyle(
                               color: textDark,
                               fontSize: 15,
@@ -589,12 +614,12 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: textDark,
                         fontSize: 13,
                         fontWeight: FontWeight.w500)),
                 Text(detail,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: textLight, fontSize: 11)),
               ],
             ),

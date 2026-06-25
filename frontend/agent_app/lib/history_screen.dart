@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'main.dart' show themeNotifier;
 
 class HistoryScreen extends StatefulWidget {
   final String userId;
@@ -58,6 +59,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
             style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: themeNotifier,
+            builder: (_, mode, __) => IconButton(
+              icon: Icon(
+                mode == ThemeMode.light ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                themeNotifier.value = mode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+              },
+              tooltip: mode == ThemeMode.light ? 'Dark mode' : 'Light mode',
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: loadHistory,

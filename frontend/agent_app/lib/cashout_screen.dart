@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'api_service.dart';
+import 'main.dart' show themeNotifier;
 
 class CashOutScreen extends StatefulWidget {
   final String agentUserId;
@@ -18,10 +19,20 @@ class CashOutScreen extends StatefulWidget {
 
 class _CashOutScreenState extends State<CashOutScreen> {
   static const Color red = Color(0xFFE91E63);
-  static const Color bgPage = Color(0xFFF5F5F5);
-  static const Color bgCard = Color(0xFFFFFFFF);
-  static const Color textDark = Color(0xFF1A202C);
-  static const Color textLight = Color(0xFF718096);
+  Color bgPage = const Color(0xFFF5F5F5);
+  Color bgCard = Colors.white;
+  Color textDark = const Color(0xFF1A202C);
+  Color textLight = const Color(0xFF718096);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    bgPage = isDark ? const Color(0xFF0B1437) : const Color(0xFFF5F5F5);
+    bgCard = isDark ? const Color(0xFF111C44) : Colors.white;
+    textDark = isDark ? Colors.white : const Color(0xFF1A202C);
+    textLight = isDark ? Colors.white60 : const Color(0xFF718096);
+  }
 
   final phoneController = TextEditingController();
   final amountController = TextEditingController();
@@ -101,6 +112,20 @@ class _CashOutScreenState extends State<CashOutScreen> {
                 color: Color(0xFF1A202C),
                 fontSize: 18,
                 fontWeight: FontWeight.bold)),
+        actions: [
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: themeNotifier,
+            builder: (_, mode, __) => IconButton(
+              icon: Icon(
+                mode == ThemeMode.light ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+              ),
+              onPressed: () {
+                themeNotifier.value = mode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+              },
+              tooltip: mode == ThemeMode.light ? 'Dark mode' : 'Light mode',
+            ),
+          ),
+        ],
       ),
       body: isSuccess ? _buildSuccess() : _buildForm(),
     );
@@ -137,7 +162,7 @@ class _CashOutScreenState extends State<CashOutScreen> {
           const SizedBox(height: 20),
 
           // Customer phone
-          const Text('Customer Phone',
+          Text('Customer Phone',
               style: TextStyle(color: textLight, fontSize: 12, fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           Container(
@@ -163,7 +188,7 @@ class _CashOutScreenState extends State<CashOutScreen> {
           const SizedBox(height: 16),
 
           // Amount
-          const Text('Amount (₹)',
+          Text('Amount (₹)',
               style: TextStyle(color: textLight, fontSize: 12, fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           Container(
@@ -175,14 +200,14 @@ class _CashOutScreenState extends State<CashOutScreen> {
             ),
             child: Row(
               children: [
-                const Text('₹', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: textDark)),
+                Text('₹', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: textDark)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
                     controller: amountController,
                     keyboardType: TextInputType.number,
                     onChanged: (_) => setState(() {}),
-                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: textDark),
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: textDark),
                     decoration: const InputDecoration(
                       hintText: '0',
                       hintStyle: TextStyle(color: Colors.black26, fontSize: 28, fontWeight: FontWeight.bold),
@@ -292,7 +317,7 @@ class _CashOutScreenState extends State<CashOutScreen> {
             ),
             const SizedBox(height: 24),
             Text('₹ ${amountController.text}',
-                style: const TextStyle(fontSize: 44, fontWeight: FontWeight.bold, color: textDark)),
+                style: TextStyle(fontSize: 44, fontWeight: FontWeight.bold, color: textDark)),
             const SizedBox(height: 8),
             Text('Cash Out for ${phoneController.text}',
                 style: const TextStyle(fontSize: 16, color: Colors.black54)),
@@ -344,7 +369,7 @@ class _CashOutScreenState extends State<CashOutScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(color: Colors.black45, fontSize: 13)),
-          Text(value, style: const TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.w600)),
+          Text(value, style: TextStyle(color: textDark, fontSize: 13, fontWeight: FontWeight.w600)),
         ],
       ),
     );
