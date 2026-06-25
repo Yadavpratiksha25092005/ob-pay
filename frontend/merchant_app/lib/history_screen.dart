@@ -110,14 +110,6 @@ class _HistoryScreenState extends State<HistoryScreen>
             icon: const Icon(Icons.filter_list_rounded, color: Color(0xFF1A202C)),
             onPressed: () => _showFilter(),
           ),
-          IconButton(
-            icon: const Icon(Icons.download_rounded, color: Color(0xFF1A202C)),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Downloading statement...')),
-              );
-            },
-          ),
         ],
         bottom: TabBar(
           controller: _tabController,
