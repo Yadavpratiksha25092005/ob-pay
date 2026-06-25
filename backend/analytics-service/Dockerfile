@@ -1,14 +1,11 @@
+$content = @"
 FROM golang:latest AS builder
 ENV GOTOOLCHAIN=auto
 ENV CGO_ENABLED=0
 ENV GOOS=linux
 ENV GOARCH=amd64
 WORKDIR /app
-<<<<<<< HEAD
 COPY . .
-=======
-COPY backend/analytics-service/ .
->>>>>>> 25f3fbd (Update Dockerfile)
 RUN go mod tidy
 RUN go build -o main .
 
@@ -18,3 +15,5 @@ WORKDIR /root/
 COPY --from=builder /app/main .
 EXPOSE 8013
 CMD ["./main"]
+"@
+$content | Set-Content "C:\ob-pay\backend\analytics-service\Dockerfile"
