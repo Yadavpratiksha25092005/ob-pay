@@ -1,17 +1,16 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'api_service.dart';
 import 'wallet_screen.dart';
 import 'history_screen.dart';
 import 'profile_screen.dart';
 import 'add_money_screen.dart';
 import 'bills_screen.dart';
-import 'kyc_screen.dart';
 import 'qr_scanner_screen.dart';
-import 'my_qr_screen.dart';
 import 'notification_screen.dart';
+import 'services_screen.dart';
 
 class PremiumHomeScreen extends StatefulWidget {
   final String userId;
@@ -29,12 +28,23 @@ class PremiumHomeScreen extends StatefulWidget {
 
 class _PremiumHomeScreenState extends State<PremiumHomeScreen>
     with TickerProviderStateMixin {
-  Map<String, dynamic>? wallet;
-  bool isLoading = true;
-  bool showBalance = true;
-  int _currentIndex = 0;
-  late AnimationController _cardController;
-  late Animation<double> _cardAnimation;
+
+  // ── Design tokens ────────────────────────────────────────────────────────
+  static const Color _blue    = Color(0xFF2563EB);
+  static const Color _bgPage  = Color(0xFFF8FAFF);
+  static const Color _textPri = Color(0xFF111827);
+  static const Color _textSec = Color(0xFF6B7280);
+  static const Color _green   = Color(0xFF16A34A);
+  static const Color _border  = Color(0xFFE5E7EB);
+
+  // ── State ────────────────────────────────────────────────────────────────
+  Map<String, dynamic>? _wallet;
+  bool _loading = true;
+  bool _showBalance = true;
+  int _navIndex = 0;
+
+  late AnimationController _cardCtrl;
+  late Animation<double>    _cardAnim;
 
   @override
   void initState() {
@@ -43,389 +53,476 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
     ));
-    _cardController = AnimationController(
-      duration: const Duration(milliseconds: 900),
+    _cardCtrl = AnimationController(
+      duration: const Duration(milliseconds: 700),
       vsync: this,
     );
-    _cardAnimation = CurvedAnimation(
-      parent: _cardController,
-      curve: Curves.easeOutBack,
-    );
-    _cardController.forward();
-    loadWallet();
+    _cardAnim = CurvedAnimation(parent: _cardCtrl, curve: Curves.easeOutCubic);
+    _cardCtrl.forward();
+    _loadWallet();
   }
 
   @override
   void dispose() {
-    _cardController.dispose();
+    _cardCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> loadWallet() async {
+  Future<void> _loadWallet() async {
     try {
       final data = await ApiService.getWallet(widget.userId);
-      setState(() {
-        wallet = data;
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() => isLoading = false);
+      if (mounted) setState(() { _wallet = data; _loading = false; });
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  double get balance {
-    if (wallet == null) return 0.0;
-    final b = wallet!['balance'];
+  double get _balance {
+    final b = _wallet?['balance'];
     if (b == null) return 0.0;
     if (b is int) return b.toDouble();
     if (b is double) return b;
     return double.tryParse(b.toString()) ?? 0.0;
   }
 
-  String get greeting {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
+  String get _greeting {
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
   }
 
+  String get _initials {
+    final parts = widget.userName.trim().split(' ');
+    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    return widget.userName.isNotEmpty ? widget.userName[0].toUpperCase() : '?';
+  }
+
+  String get _upiId {
+    final name = widget.userName.trim().toLowerCase().replaceAll(' ', '.');
+    return '$name@obpay';
+  }
+
+  void _go(Widget screen) {
+    HapticFeedback.lightImpact();
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+  }
+
+  // ── Scaffold ─────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
+    final topPad = MediaQuery.of(context).padding.top;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F4F7),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SafeArea(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _buildAppBar(),
-                    _buildWalletCard(),
-                    const SizedBox(height: 20),
-                    _buildQuickActions(),
-                    const SizedBox(height: 20),
-                    _buildScanButton(),
-                    const SizedBox(height: 20),
-                    _buildSpendingChart(),
-                    const SizedBox(height: 20),
-                    _buildRecentTransactions(),
-                    const SizedBox(height: 20),
-                    _buildAnalyticsCards(),
-                    const SizedBox(height: 20),
-                    _buildOffersSection(),
-                    const SizedBox(height: 40),
-                  ],
-                ),
+      backgroundColor: _bgPage,
+      body: _loading
+          ? const Center(
+              child: CircularProgressIndicator(color: _blue, strokeWidth: 2.5))
+          : RefreshIndicator(
+              color: _blue,
+              displacement: 60,
+              onRefresh: _loadWallet,
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics()),
+                slivers: [
+                  SliverToBoxAdapter(child: SizedBox(height: topPad + 12)),
+                  SliverToBoxAdapter(child: _header()),
+                  SliverToBoxAdapter(child: const SizedBox(height: 20)),
+                  SliverToBoxAdapter(child: _walletCard()),
+                  SliverToBoxAdapter(child: const SizedBox(height: 20)),
+                  SliverToBoxAdapter(child: _quickActions()),
+                  SliverToBoxAdapter(child: const SizedBox(height: 20)),
+                  SliverToBoxAdapter(child: _billsSection()),
+                  SliverToBoxAdapter(child: const SizedBox(height: 20)),
+                  SliverToBoxAdapter(child: _offerBanner()),
+                  SliverToBoxAdapter(child: const SizedBox(height: 20)),
+                  SliverToBoxAdapter(child: _recentTransactions()),
+                  SliverToBoxAdapter(child: const SizedBox(height: 100)),
+                ],
               ),
             ),
-      floatingActionButton: GestureDetector(
-        onTap: () {
-          HapticFeedback.mediumImpact();
-          Navigator.push(context, MaterialPageRoute(
-              builder: (_) => QRScannerScreen(userId: widget.userId)));
-        },
-        child: Container(
-          width: 64, height: 64,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
-            ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF11998E).withValues(alpha: 0.5),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: const Icon(Icons.qr_code_scanner_rounded,
-              color: Colors.white, size: 28),
-        ),
-      ),
+      floatingActionButton: _scanFab(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        color: Colors.white,
-        elevation: 8,
-        child: SizedBox(
-          height: 60,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _navItem(0, Icons.home_rounded, 'Home'),
-              _navItem(1, Icons.receipt_long_rounded, 'Transactions'),
-              const SizedBox(width: 60),
-              _navItem(3, Icons.person_rounded, 'Profile'),
-            ],
-          ),
-        ),
-      ),
+      bottomNavigationBar: _bottomNav(),
     );
   }
 
-  Widget _navItem(int index, IconData icon, String label) {
-    final isSelected = _currentIndex == index;
+  // ── FAB ──────────────────────────────────────────────────────────────────
+  Widget _scanFab() {
     return GestureDetector(
       onTap: () {
-        setState(() => _currentIndex = index);
-        if (index == 1) {
-          Navigator.push(context, MaterialPageRoute(
-              builder: (_) => HistoryScreen(userId: widget.userId)));
-        } else if (index == 3) {
-          Navigator.push(context, MaterialPageRoute(
-              builder: (_) => ProfileScreen(
-                    userId: widget.userId,
-                    userName: widget.userName,
-                    phone: '',
-                  )));
-        }
+        HapticFeedback.mediumImpact();
+        _go(QRScannerScreen(userId: widget.userId));
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        width: 60, height: 60,
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF6C63FF).withOpacity(0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
+          color: _blue,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: _blue.withValues(alpha: 0.38),
+              blurRadius: 18, offset: const Offset(0, 5)),
+          ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,
-                color: isSelected ? const Color(0xFF6C63FF) : Colors.black38,
-                size: 24),
-            const SizedBox(height: 3),
-            Text(label,
-                style: TextStyle(
-                    color: isSelected
-                        ? const Color(0xFF6C63FF)
-                        : Colors.black38,
-                    fontSize: 10,
-                    fontWeight: isSelected
-                        ? FontWeight.w600
-                        : FontWeight.normal)),
+            Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 22),
+            SizedBox(height: 2),
+            Text('Scan QR',
+                style: TextStyle(color: Colors.white, fontSize: 8,
+                    fontWeight: FontWeight.w500)),
           ],
         ),
       ),
     );
   }
 
+  // ── Bottom nav ────────────────────────────────────────────────────────────
+  Widget _bottomNav() {
+    return BottomAppBar(
+      shape: const CircularNotchedRectangle(),
+      notchMargin: 8,
+      color: Colors.white,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      child: Container(
+        height: 64,
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: _border, width: 1))),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _navItem(0, Icons.home_rounded, Icons.home_outlined, 'Home'),
+            _navItem(1, Icons.receipt_long_rounded,
+                Icons.receipt_long_outlined, 'Payments'),
+            const SizedBox(width: 58),
+            _navItem(3, Icons.apps_rounded, Icons.apps_outlined, 'Services'),
+            _navItem(4, Icons.person_rounded,
+                Icons.person_outlined, 'Profile'),
+          ],
+        ),
+      ),
+    );
+  }
 
-  Widget _buildAppBar() {
-  return FadeInDown(
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(
-                builder: (_) => ProfileScreen(
-                      userId: widget.userId,
-                      userName: widget.userName,
-                      phone: '',
-                    ))),
-            child: Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6C63FF), Color(0xFF3D5AF1)],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF6C63FF).withOpacity(0.3),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.person, color: Colors.white, size: 22),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('$greeting 👋',
-                    style: const TextStyle(color: Colors.black54, fontSize: 12)),
-                Text(widget.userName,
+  Widget _navItem(int idx, IconData active, IconData inactive, String label) {
+    final sel = _navIndex == idx;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        setState(() => _navIndex = idx);
+        if (idx == 1) { _go(HistoryScreen(userId: widget.userId)); }
+        if (idx == 3) { _go(const ServicesScreen()); }
+        if (idx == 4) {
+          _go(ProfileScreen(
+              userId: widget.userId,
+              userName: widget.userName,
+              phone: ''));
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(sel ? active : inactive,
+                color: sel ? _blue : const Color(0xFFBCC1CD), size: 24),
+            const SizedBox(height: 3),
+            Text(label,
+                style: TextStyle(
+                  color: sel ? _blue : const Color(0xFFBCC1CD),
+                  fontSize: 10,
+                  fontWeight: sel ? FontWeight.w600 : FontWeight.normal,
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Header ────────────────────────────────────────────────────────────────
+  Widget _header() {
+    return FadeInDown(
+      duration: const Duration(milliseconds: 400),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          children: [
+            GestureDetector(
+              onTap: () => _go(ProfileScreen(
+                  userId: widget.userId,
+                  userName: widget.userName,
+                  phone: '')),
+              child: Container(
+                width: 46, height: 46,
+                decoration: const BoxDecoration(
+                    color: _blue, shape: BoxShape.circle),
+                alignment: Alignment.center,
+                child: Text(_initials,
                     style: const TextStyle(
-                        color: Colors.black87,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold)),
-              ],
+                        color: Colors.white, fontSize: 17,
+                        fontWeight: FontWeight.w700)),
+              ),
             ),
-          ),
-          GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(
-                builder: (_) => NotificationScreen(userId: widget.userId))),
-            child: Stack(
-              children: [
-                Container(
-                  width: 44, height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text('Hi, ${widget.userName.split(' ').first}',
+                          style: const TextStyle(
+                              color: _textPri, fontSize: 17,
+                              fontWeight: FontWeight.w700)),
+                      const SizedBox(width: 4),
+                      const Text('👋', style: TextStyle(fontSize: 15)),
                     ],
                   ),
-                  child: const Icon(Icons.notifications_outlined,
-                      color: Colors.black87, size: 22),
-                ),
-                Positioned(
-                  top: 8, right: 8,
-                  child: Container(
-                    width: 8, height: 8,
-                    decoration: const BoxDecoration(
-                        color: Colors.red, shape: BoxShape.circle),
-                  ),
-                ),
-              ],
+                  const SizedBox(height: 1),
+                  Text(_greeting,
+                      style: const TextStyle(color: _textSec, fontSize: 12)),
+                ],
+              ),
             ),
-          ),
-         
-        ],
+            GestureDetector(
+              onTap: () => _go(NotificationScreen(userId: widget.userId)),
+              child: Container(
+                width: 46, height: 46,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: _border),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 8, offset: const Offset(0, 2)),
+                  ],
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(Icons.notifications_outlined,
+                        color: _textPri, size: 22),
+                    Positioned(
+                      top: 9, right: 10,
+                      child: Container(
+                        width: 7, height: 7,
+                        decoration: const BoxDecoration(
+                            color: Color(0xFFEF4444),
+                            shape: BoxShape.circle),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-  Widget _buildWalletCard() {
+  // ── Wallet card ───────────────────────────────────────────────────────────
+  Widget _walletCard() {
     return FadeInDown(
-      delay: const Duration(milliseconds: 200),
+      delay: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 400),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: ScaleTransition(
-          scale: _cardAnimation,
+          scale: _cardAnim,
           child: Container(
             width: double.infinity,
-            height: 210,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF6C63FF), Color(0xFF3D5AF1), Color(0xFF1E3A8A)],
+                colors: [Color(0xFF1D4ED8), Color(0xFF2563EB), Color(0xFF3B82F6)],
+                stops: [0.0, 0.55, 1.0],
               ),
+              borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF6C63FF).withOpacity(0.45),
-                  blurRadius: 25,
-                  offset: const Offset(0, 12),
-                ),
+                  color: _blue.withValues(alpha: 0.30),
+                  blurRadius: 24, offset: const Offset(0, 10)),
               ],
             ),
             child: Stack(
+              clipBehavior: Clip.hardEdge,
               children: [
+                // Monument illustration (right side, line art)
                 Positioned(
-                  top: -30, right: -20,
-                  child: Container(
-                    width: 140, height: 140,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.07),
-                    ),
+                  right: 0, top: 0, bottom: 0,
+                  child: SizedBox(
+                    width: 135,
+                    child: CustomPaint(
+                      painter: _MonumentPainter(
+                          color: Colors.white.withValues(alpha: 0.16))),
                   ),
                 ),
-                Positioned(
-                  bottom: -40, left: 10,
-                  child: Container(
-                    width: 160, height: 160,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.05),
-                    ),
-                  ),
-                ),
+
+                // Card content
                 Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(22),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Brand row
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            width: 28, height: 28,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.account_balance_wallet, color: Colors.white, size: 13),
-                                SizedBox(width: 5),
-                                Text('OB Wallet', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
-                              ],
-                            ),
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle),
+                            child: const Icon(Icons.currency_rupee_rounded,
+                                color: Colors.white, size: 15),
                           ),
+                          const SizedBox(width: 8),
+                          const Text('OneBharat Pay',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600)),
+                          const Spacer(),
                           GestureDetector(
                             onTap: () {
                               HapticFeedback.lightImpact();
-                              setState(() => showBalance = !showBalance);
+                              setState(() => _showBalance = !_showBalance);
                             },
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                showBalance ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                                color: Colors.white, size: 18,
-                              ),
-                            ),
+                            child: Icon(
+                              _showBalance
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: Colors.white60, size: 20),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 14),
-                      Text('Total Balance',
-                          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13)),
-                      const SizedBox(height: 4),
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 400),
-                        child: Text(
-                          showBalance ? '₹ ${balance.toStringAsFixed(2)}' : '₹ ••••••',
-                          key: ValueKey(showBalance),
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 34,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5),
+
+                      const SizedBox(height: 20),
+
+                      // Balance
+                      const Text('Total Balance',
+                          style: TextStyle(
+                              color: Colors.white60, fontSize: 12,
+                              letterSpacing: 0.2)),
+                      const SizedBox(height: 6),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            transitionBuilder: (c, a) =>
+                                FadeTransition(opacity: a, child: c),
+                            child: Text(
+                              _showBalance
+                                  ? '₹${_balance.toStringAsFixed(2)}'
+                                  : '₹ ••••••',
+                              key: ValueKey(_showBalance),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 34,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          GestureDetector(
+                            onTap: () => _go(WalletScreen(userId: widget.userId)),
+                            child: const Icon(Icons.chevron_right_rounded,
+                                color: Colors.white54, size: 24),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // UPI ID
+                      GestureDetector(
+                        onTap: () {
+                          Clipboard.setData(ClipboardData(text: _upiId));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('UPI ID copied to clipboard'),
+                                backgroundColor: _green,
+                                duration: Duration(seconds: 2)));
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('UPI ID: ',
+                                style: TextStyle(
+                                    color: Colors.white54, fontSize: 12)),
+                            Text(_upiId,
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 12,
+                                    fontWeight: FontWeight.w500)),
+                            const SizedBox(width: 6),
+                            const Icon(Icons.copy_rounded,
+                                color: Colors.white38, size: 13),
+                          ],
                         ),
                       ),
-                      const Spacer(),
+
+                      const SizedBox(height: 20),
+
+                      // Action buttons
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Daily Limit',
-                                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 11)),
-                              Text('₹ ${wallet?['daily_limit'] ?? 10000}',
-                                  style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
-                            ],
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(20),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () =>
+                                  _go(AddMoneyScreen(userId: widget.userId)),
+                              child: Container(
+                                height: 40,
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10)),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.add_rounded,
+                                        color: _blue, size: 18),
+                                    SizedBox(width: 6),
+                                    Text('Add Money',
+                                        style: TextStyle(
+                                            color: _blue, fontSize: 13,
+                                            fontWeight: FontWeight.w600)),
+                                  ],
+                                ),
+                              ),
                             ),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.circle, color: Colors.greenAccent, size: 8),
-                                SizedBox(width: 5),
-                                Text('Active', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
-                              ],
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () =>
+                                  _go(WalletScreen(userId: widget.userId)),
+                              child: Container(
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                      color: Colors.white60, width: 1.5),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.account_balance_wallet_outlined,
+                                        color: Colors.white, size: 16),
+                                    SizedBox(width: 6),
+                                    Text('Withdraw',
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 13,
+                                            fontWeight: FontWeight.w600)),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -441,156 +538,23 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
     );
   }
 
-  Widget _buildQuickActions() {
-    final actions = [
-      {'icon': Icons.send_rounded, 'label': 'Send', 'color': const Color(0xFF6C63FF), 'bg': const Color(0xFFEEEDFE), 'screen': 'send'},
-      {'icon': Icons.add_circle_rounded, 'label': 'Add Money', 'color': const Color(0xFFFF9800), 'bg': const Color(0xFFFFF3E0), 'screen': 'add'},
-      {'icon': Icons.history_rounded, 'label': 'History', 'color': const Color(0xFFE91E63), 'bg': const Color(0xFFFCE4EC), 'screen': 'history'},
-      {'icon': Icons.receipt_rounded, 'label': 'Bills', 'color': const Color(0xFF009688), 'bg': const Color(0xFFE0F2F1), 'screen': 'bills'},
-      {'icon': Icons.verified_user_rounded, 'label': 'KYC', 'color': const Color(0xFF9C27B0), 'bg': const Color(0xFFF3E5F5), 'screen': 'kyc'},
-      {'icon': Icons.qr_code_rounded, 'label': 'My QR', 'color': const Color(0xFF6C63FF), 'bg': const Color(0xFFEEEDFE), 'screen': 'myqr'},
-    ];
-
+  // ── Quick Actions ─────────────────────────────────────────────────────────
+  Widget _quickActions() {
     return FadeInUp(
-      delay: const Duration(milliseconds: 300),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 3,
-          childAspectRatio: 1.0,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          children: actions.map<Widget>((action) {
-            final color = action['color'] as Color;
-            final bg = action['bg'] as Color;
-            return GestureDetector(
-              onTap: () {
-                HapticFeedback.lightImpact();
-                final screen = action['screen'] as String;
-                if (screen == 'send') {
-                  Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => WalletScreen(userId: widget.userId)));
-                } else if (screen == 'add') {
-                  Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => AddMoneyScreen(userId: widget.userId)));
-                } else if (screen == 'history') {
-                  Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => HistoryScreen(userId: widget.userId)));
-                } else if (screen == 'bills' || screen == 'recharge') {
-                  Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => BillsScreen(userId: widget.userId)));
-                } else if (screen == 'kyc') {
-                  Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => KYCScreen(userId: widget.userId)));
-                } else if (screen == 'myqr') {
-                  Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => MyQRScreen(
-                            userId: widget.userId,
-                            userName: widget.userName,
-                          )));
-                }
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 52, height: 52,
-                      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(16)),
-                      child: Icon(action['icon'] as IconData, color: color, size: 24),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(action['label'] as String,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            color: Colors.black87,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500)),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScanButton() {
-    return FadeInUp(
-      delay: const Duration(milliseconds: 350),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: GestureDetector(
-          onTap: () {
-            HapticFeedback.mediumImpact();
-            Navigator.push(context, MaterialPageRoute(
-                builder: (_) => QRScannerScreen(userId: widget.userId)));
-          },
-          child: Container(
-            width: double.infinity,
-            height: 58,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
-              ),
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF11998E).withOpacity(0.4),
-                  blurRadius: 15,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.qr_code_scanner, color: Colors.white, size: 24),
-                SizedBox(width: 10),
-                Text('Scan & Pay',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5)),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSpendingChart() {
-    return FadeInUp(
-      delay: const Duration(milliseconds: 400),
+      delay: const Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: 400),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: _border),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 12, offset: const Offset(0, 4)),
             ],
           ),
           child: Column(
@@ -599,179 +563,33 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Spending Overview',
-                      style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEEEDFE),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text('This Week',
-                        style: TextStyle(color: Color(0xFF6C63FF), fontSize: 11, fontWeight: FontWeight.w500)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                height: 150,
-                child: LineChart(
-                  LineChartData(
-                    gridData: FlGridData(
-                      show: true,
-                      drawVerticalLine: false,
-                      horizontalInterval: 300,
-                      getDrawingHorizontalLine: (value) => FlLine(
-                        color: Colors.grey.withOpacity(0.1), strokeWidth: 1),
-                    ),
-                    titlesData: FlTitlesData(
-                      leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Text(days[value.toInt() % 7],
-                                  style: const TextStyle(fontSize: 11, color: Colors.black38)),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    borderData: FlBorderData(show: false),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: const [
-                          FlSpot(0, 200), FlSpot(1, 500), FlSpot(2, 300),
-                          FlSpot(3, 800), FlSpot(4, 400), FlSpot(5, 900), FlSpot(6, 600),
-                        ],
-                        isCurved: true,
-                        gradient: const LinearGradient(
-                            colors: [Color(0xFF6C63FF), Color(0xFF3D5AF1)]),
-                        barWidth: 3,
-                        belowBarData: BarAreaData(
-                          show: true,
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              const Color(0xFF6C63FF).withOpacity(0.15),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                        dotData: FlDotData(
-                          show: true,
-                          getDotPainter: (spot, percent, bar, index) =>
-                              FlDotCirclePainter(
-                                  radius: 4,
-                                  color: const Color(0xFF6C63FF),
-                                  strokeWidth: 2,
-                                  strokeColor: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRecentTransactions() {
-    final transactions = [
-      {'name': 'Money Received', 'amount': '+₹500', 'isCredit': true, 'icon': Icons.arrow_downward_rounded, 'time': '2 min ago', 'category': 'Transfer'},
-      {'name': 'Money Sent', 'amount': '-₹200', 'isCredit': false, 'icon': Icons.arrow_upward_rounded, 'time': '1 hour ago', 'category': 'Transfer'},
-      {'name': 'Electricity Bill', 'amount': '-₹299', 'isCredit': false, 'icon': Icons.electric_bolt, 'time': '3 hours ago', 'category': 'Bills'},
-      {'name': 'Jio Recharge', 'amount': '-₹149', 'isCredit': false, 'icon': Icons.phone_android, 'time': 'Yesterday', 'category': 'Recharge'},
-    ];
-
-    return FadeInUp(
-      delay: const Duration(milliseconds: 500),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Recent Transactions',
-                      style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Text('Quick Actions',
+                      style: TextStyle(
+                          color: _textPri, fontSize: 14,
+                          fontWeight: FontWeight.w700)),
                   GestureDetector(
-                    onTap: () => Navigator.push(context, MaterialPageRoute(
-                        builder: (_) => HistoryScreen(userId: widget.userId))),
-                    child: const Text('See all',
-                        style: TextStyle(color: Color(0xFF6C63FF), fontSize: 13, fontWeight: FontWeight.w500)),
+                    onTap: () => _go(const ServicesScreen()),
+                    child: const Text('See All',
+                        style: TextStyle(
+                            color: _blue, fontSize: 12,
+                            fontWeight: FontWeight.w500)),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              ...transactions.map((tx) {
-                final isCredit = tx['isCredit'] as bool;
-                final color = isCredit ? const Color(0xFF00C853) : const Color(0xFFE91E63);
-                final bg = isCredit ? const Color(0xFFE8F5E9) : const Color(0xFFFCE4EC);
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 48, height: 48,
-                        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(14)),
-                        child: Icon(tx['icon'] as IconData, color: color, size: 22),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(tx['name'] as String,
-                                style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600, fontSize: 14)),
-                            const SizedBox(height: 3),
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade100,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(tx['category'] as String,
-                                      style: const TextStyle(color: Colors.black45, fontSize: 10)),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(tx['time'] as String,
-                                    style: const TextStyle(color: Colors.black38, fontSize: 11)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text(tx['amount'] as String,
-                          style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
-                    ],
-                  ),
-                );
-              }),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _qAction(Icons.qr_code_scanner_rounded, 'Scan QR',
+                      () => _go(QRScannerScreen(userId: widget.userId))),
+                  _qAction(Icons.person_rounded, 'Pay Contact',
+                      () => _go(WalletScreen(userId: widget.userId))),
+                  _qAction(Icons.account_balance_rounded, 'Bank Transfer',
+                      () => _go(WalletScreen(userId: widget.userId))),
+                  _qAction(Icons.phone_android_rounded, 'Mobile Recharge',
+                      () => _go(BillsScreen(userId: widget.userId))),
+                ],
+              ),
             ],
           ),
         ),
@@ -779,115 +597,45 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
     );
   }
 
-  Widget _buildAnalyticsCards() {
-    return FadeInUp(
-      delay: const Duration(milliseconds: 600),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Row(
+  Widget _qAction(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 68,
+        child: Column(
           children: [
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFF6B6B).withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 22),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text('+12%', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    const Text('₹1,248', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-                    const Text('Total Spent', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                    const Text('This month', style: TextStyle(color: Colors.white60, fontSize: 10)),
-                  ],
-                ),
-              ),
+            Container(
+              width: 54, height: 54,
+              decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(15)),
+              child: Icon(icon, color: _blue, size: 24),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF11998E).withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Icon(Icons.arrow_downward_rounded, color: Colors.white, size: 22),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text('+8%', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    const Text('₹2,500', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-                    const Text('Received', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                    const Text('This month', style: TextStyle(color: Colors.white60, fontSize: 10)),
-                  ],
-                ),
-              ),
-            ),
+            const SizedBox(height: 8),
+            Text(label,
+                textAlign: TextAlign.center, maxLines: 2,
+                style: const TextStyle(
+                    color: _textPri, fontSize: 11,
+                    fontWeight: FontWeight.w500, height: 1.3)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildOffersSection() {
-    final offers = [
-      {'title': '10% Cashback', 'subtitle': 'On mobile recharge', 'colors': [const Color(0xFF6C63FF), const Color(0xFF3D5AF1)], 'icon': Icons.phone_android},
-      {'title': '5% Off', 'subtitle': 'On electricity bills', 'colors': [const Color(0xFFFF6B35), const Color(0xFFFF9800)], 'icon': Icons.electric_bolt},
-      {'title': 'Free Transfer', 'subtitle': 'Send up to ₹1000', 'colors': [const Color(0xFF11998E), const Color(0xFF38EF7D)], 'icon': Icons.send},
+  // ── Bill Payments & Recharges ─────────────────────────────────────────────
+  Widget _billsSection() {
+    final cats = [
+      _Cat(Icons.phone_android_rounded,       'Mobile',       const Color(0xFF2563EB)),
+      _Cat(Icons.electric_bolt_rounded,        'Electricity',  const Color(0xFFD97706)),
+      _Cat(Icons.tv_rounded,                   'DTH',          const Color(0xFF7C3AED)),
+      _Cat(Icons.local_fire_department_rounded,'Gas',          const Color(0xFFDC2626)),
+      _Cat(Icons.directions_car_rounded,       'FASTag',       const Color(0xFF059669)),
     ];
 
     return FadeInUp(
-      delay: const Duration(milliseconds: 700),
+      delay: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 400),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -896,53 +644,138 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Offers & Rewards',
-                    style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(),
+                const Text('Bill Payments & Recharges',
+                    style: TextStyle(
+                        color: _textPri, fontSize: 14,
+                        fontWeight: FontWeight.w700)),
+                GestureDetector(
+                  onTap: () => _go(BillsScreen(userId: widget.userId)),
+                  child: const Text('See All',
+                      style: TextStyle(
+                          color: _blue, fontSize: 12,
+                          fontWeight: FontWeight.w500)),
+                ),
               ],
             ),
             const SizedBox(height: 14),
-            SizedBox(
-              height: 115,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: offers.length,
-                itemBuilder: (context, index) {
-                  final offer = offers[index];
-                  final colors = offer['colors'] as List<Color>;
-                  return Container(
-                    width: 165,
-                    margin: const EdgeInsets.only(right: 12),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: colors,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: cats.map((c) => GestureDetector(
+                onTap: () => _go(BillsScreen(userId: widget.userId)),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 54, height: 54,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: _border),
+                        boxShadow: [
+                          BoxShadow(
+                              color: c.color.withValues(alpha: 0.12),
+                              blurRadius: 8, offset: const Offset(0, 3)),
+                        ],
                       ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colors[0].withOpacity(0.35),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
+                      child: Icon(c.icon, color: c.color, size: 24),
                     ),
+                    const SizedBox(height: 7),
+                    Text(c.label,
+                        style: const TextStyle(
+                            color: _textSec, fontSize: 11,
+                            fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              )).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Offers & Rewards banner ───────────────────────────────────────────────
+  Widget _offerBanner() {
+    return FadeInUp(
+      delay: const Duration(milliseconds: 250),
+      duration: const Duration(milliseconds: 400),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Offers & Rewards',
+                style: TextStyle(
+                    color: _textPri, fontSize: 14,
+                    fontWeight: FontWeight.w700)),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFEEF2FF), Color(0xFFDBEAFE)],
+                ),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFBFDBFE)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(offer['icon'] as IconData, color: Colors.white70, size: 22),
-                        const Spacer(),
-                        Text(offer['title'] as String,
-                            style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 2),
-                        Text(offer['subtitle'] as String,
-                            style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                        const Text('Get up to ₹200 Cashback',
+                            style: TextStyle(
+                                color: Color(0xFF1E40AF), fontSize: 16,
+                                fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 4),
+                        const Text('On your next payment',
+                            style: TextStyle(
+                                color: Color(0xFF3B82F6), fontSize: 12)),
+                        const SizedBox(height: 14),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                              color: _blue,
+                              borderRadius: BorderRadius.circular(20)),
+                          child: const Text('View Offers',
+                              style: TextStyle(
+                                  color: Colors.white, fontSize: 12,
+                                  fontWeight: FontWeight.w600)),
+                        ),
                       ],
                     ),
-                  );
-                },
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 80, height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Icons.card_giftcard_rounded,
+                            color: Color(0xFF2563EB), size: 40),
+                        Positioned(
+                          top: 10, right: 10,
+                          child: Container(
+                            width: 20, height: 20,
+                            decoration: const BoxDecoration(
+                                color: Color(0xFFFBBF24),
+                                shape: BoxShape.circle),
+                            child: const Icon(Icons.attach_money_rounded,
+                                color: Colors.white, size: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -950,4 +783,194 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
       ),
     );
   }
+
+  // ── Recent Transactions ───────────────────────────────────────────────────
+  Widget _recentTransactions() {
+    final txns = [
+      _Tx(Icons.arrow_downward_rounded, 'Money Received',
+          'From Amit Verma', '+₹1,250.00', true, 'Today, 09:30 AM'),
+      _Tx(Icons.arrow_upward_rounded, 'Paid to Priya Sharma',
+          'UPI · 9876543210', '-₹500.00', false, 'Today, 09:20 AM'),
+      _Tx(Icons.phone_android_rounded, 'Mobile Recharge',
+          'Airtel · 9876543210', '-₹199.00', false, 'Yesterday, 07:45 PM'),
+    ];
+
+    return FadeInUp(
+      delay: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Recent Transactions',
+                    style: TextStyle(
+                        color: _textPri, fontSize: 14,
+                        fontWeight: FontWeight.w700)),
+                GestureDetector(
+                  onTap: () => _go(HistoryScreen(userId: widget.userId)),
+                  child: const Text('See All',
+                      style: TextStyle(
+                          color: _blue, fontSize: 12,
+                          fontWeight: FontWeight.w500)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: _border),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 12, offset: const Offset(0, 4)),
+                ],
+              ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: txns.length,
+                separatorBuilder: (_, _) =>
+                    const Divider(height: 1, indent: 68,
+                        color: Color(0xFFF3F4F6)),
+                itemBuilder: (_, i) => _txTile(txns[i]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _txTile(_Tx tx) {
+    final iconBg    = tx.isCredit
+        ? const Color(0xFFDCFCE7) : const Color(0xFFEFF6FF);
+    final iconColor = tx.isCredit ? _green : _blue;
+    final amtColor  = tx.isCredit ? _green : _textPri;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      child: Row(
+        children: [
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(14)),
+            child: Icon(tx.icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(tx.name,
+                    style: const TextStyle(
+                        color: _textPri, fontSize: 13,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text('${tx.detail}  ·  ${tx.time}',
+                    style: const TextStyle(
+                        color: _textSec, fontSize: 11)),
+              ],
+            ),
+          ),
+          Text(tx.amount,
+              style: TextStyle(
+                  color: amtColor, fontSize: 13,
+                  fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Small data helpers ────────────────────────────────────────────────────────
+class _Cat {
+  final IconData icon; final String label; final Color color;
+  const _Cat(this.icon, this.label, this.color);
+}
+
+class _Tx {
+  final IconData icon; final String name; final String detail;
+  final String amount; final bool isCredit; final String time;
+  const _Tx(this.icon, this.name, this.detail, this.amount, this.isCredit, this.time);
+}
+
+// ── India Gate monument — line-art CustomPainter ──────────────────────────────
+class _MonumentPainter extends CustomPainter {
+  final Color color;
+  const _MonumentPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.6
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final w = size.width;
+    final h = size.height;
+
+    void l(double x1, double y1, double x2, double y2) =>
+        canvas.drawLine(Offset(x1, y1), Offset(x2, y2), p);
+
+    // Base steps
+    l(0, h,         w, h);
+    l(w*.06, h*.90, w*.94, h*.90);
+    l(w*.12, h*.82, w*.88, h*.82);
+
+    // Outer pillars
+    l(w*.06, h*.90, w*.06, h*.22);
+    l(w*.18, h*.82, w*.18, h*.22);
+    l(w*.94, h*.90, w*.94, h*.22);
+    l(w*.82, h*.82, w*.82, h*.22);
+
+    // Top main beam
+    l(w*.06, h*.22, w*.94, h*.22);
+    l(w*.06, h*.16, w*.94, h*.16);
+
+    // Upper attic
+    l(w*.18, h*.16, w*.18, h*.08);
+    l(w*.82, h*.16, w*.82, h*.08);
+    l(w*.18, h*.08, w*.82, h*.08);
+
+    // Crown
+    l(w*.36, h*.08, w*.36, h*.02);
+    l(w*.64, h*.08, w*.64, h*.02);
+    l(w*.36, h*.02, w*.64, h*.02);
+
+    // Inner arch pillars (left pair)
+    l(w*.30, h*.82, w*.30, h*.48);
+    l(w*.38, h*.82, w*.38, h*.48);
+    // Inner arch pillars (right pair)
+    l(w*.62, h*.82, w*.62, h*.48);
+    l(w*.70, h*.82, w*.70, h*.48);
+
+    // Arch cross-beams
+    l(w*.30, h*.48, w*.38, h*.48);
+    l(w*.62, h*.48, w*.70, h*.48);
+
+    // Central arch (semicircle)
+    final cx = w * .50;
+    final cy = h * .48;
+    final r  = w * .12;
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset(cx, cy), radius: r),
+      math.pi, math.pi, false, p);
+
+    // Arch gap lines
+    l(w*.38, h*.48, cx - r, h*.48);
+    l(cx + r, h*.48, w*.62, h*.48);
+  }
+
+  @override
+  bool shouldRepaint(_MonumentPainter o) => false;
 }

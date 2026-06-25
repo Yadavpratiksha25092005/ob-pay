@@ -20,10 +20,16 @@ class _HistoryScreenState extends State<HistoryScreen>
   bool _showSearch = false;
   final TextEditingController _searchController = TextEditingController();
 
-  final List<String> tabs = ['All', 'Received', 'Sent', 'Paid Bills', 'Recharge'];
+  final List<String> tabs = ['All', 'Received', 'Paid', 'Added Money'];
 
-  static const Color purple = Color(0xFF6C63FF);
-  static const Color bgPage = Color(0xFFF2F4F7);
+  // Design tokens
+  static const Color primary = Color(0xFF2563EB);
+  static const Color bgPage = Color(0xFFF8FAFF);
+  static const Color textPrimary = Color(0xFF111827);
+  static const Color textSecondary = Color(0xFF6B7280);
+  static const Color colorGreen = Color(0xFF16A34A);
+  static const Color colorRed = Color(0xFFDC2626);
+  static const Color borderColor = Color(0xFFE5E7EB);
 
   @override
   void initState() {
@@ -55,26 +61,26 @@ class _HistoryScreenState extends State<HistoryScreen>
   }
 
   Future<void> loadHistory() async {
-  try {
-    final data = await ApiService.getPaymentHistory(widget.userId);
-    setState(() {
-      payments = data['payments'] ?? [];
-      isLoading = false;
-    });
-    print('Payments loaded: ${payments.length}');
-    print('First payment: ${payments.isNotEmpty ? payments[0] : 'none'}');
-  } catch (e) {
-    print('Error: $e');
-    setState(() => isLoading = false);
+    try {
+      final data = await ApiService.getPaymentHistory(widget.userId);
+      setState(() {
+        payments = data['payments'] ?? [];
+        isLoading = false;
+      });
+      print('Payments loaded: ${payments.length}');
+      print('First payment: ${payments.isNotEmpty ? payments[0] : 'none'}');
+    } catch (e) {
+      print('Error: $e');
+      setState(() => isLoading = false);
+    }
   }
-}
 
   List<dynamic> get filteredPayments {
     if (selectedTab == 'All') return payments;
     if (selectedTab == 'Received') {
       return payments.where((p) => p['receiver_user_id'] == widget.userId).toList();
     }
-    if (selectedTab == 'Sent') {
+    if (selectedTab == 'Paid') {
       return payments.where((p) => p['sender_user_id'] == widget.userId).toList();
     }
     return payments;
@@ -101,7 +107,7 @@ class _HistoryScreenState extends State<HistoryScreen>
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.black87),
+          icon: const Icon(Icons.arrow_back_rounded, color: textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: _showSearch
@@ -111,21 +117,24 @@ class _HistoryScreenState extends State<HistoryScreen>
                 decoration: const InputDecoration(
                   hintText: 'Search by ID, amount, description, date...',
                   border: InputBorder.none,
-                  hintStyle: TextStyle(color: Colors.black38, fontSize: 14),
+                  hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
                 ),
-                style: const TextStyle(color: Colors.black87, fontSize: 15),
+                style: const TextStyle(color: textPrimary, fontSize: 15),
                 onChanged: (v) => setState(() => _searchQuery = v),
               )
-            : const Text('Transactions',
+            : const Text(
+                'Transactions',
                 style: TextStyle(
-                    color: Colors.black87,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold)),
+                  color: textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
         actions: [
           IconButton(
             icon: Icon(
               _showSearch ? Icons.close_rounded : Icons.search_rounded,
-              color: Colors.black87,
+              color: textPrimary,
             ),
             onPressed: () {
               setState(() {
@@ -138,159 +147,223 @@ class _HistoryScreenState extends State<HistoryScreen>
             },
           ),
           IconButton(
-            icon: const Icon(Icons.filter_list_rounded, color: Colors.black87),
+            icon: const Icon(Icons.filter_list_rounded, color: textPrimary),
             onPressed: () => _showFilter(),
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.black45,
-          indicator: BoxDecoration(
-            color: purple,
-            borderRadius: BorderRadius.circular(20),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: borderColor)),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              labelColor: primary,
+              unselectedLabelColor: textSecondary,
+              indicator: const UnderlineTabIndicator(
+                borderSide: BorderSide(color: primary, width: 2),
+                insets: EdgeInsets.symmetric(horizontal: 0),
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 20),
+              tabs: tabs
+                  .map((tab) => Tab(
+                        child: Text(
+                          tab,
+                          style: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
+                      ))
+                  .toList(),
+            ),
           ),
-          indicatorSize: TabBarIndicatorSize.tab,
-          labelPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          tabs: tabs.map((tab) => Text(tab,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500))).toList(),
         ),
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: primary))
           : TabBarView(
               controller: _tabController,
               children: [
                 _buildAllTransactions(),
                 _buildPaymentsList(
-                    payments.where((p) => p['receiver_user_id'] == widget.userId).toList(),
-                    isReceived: true),
+                  payments
+                      .where((p) => p['receiver_user_id'] == widget.userId)
+                      .toList(),
+                  isReceived: true,
+                ),
                 _buildPaymentsList(
-                    payments.where((p) => p['sender_user_id'] == widget.userId).toList(),
-                    isReceived: false),
-                _buildSpecialList(dummyBills, 'bills'),
-                _buildSpecialList(dummyRecharges, 'recharge'),
+                  payments
+                      .where((p) => p['sender_user_id'] == widget.userId)
+                      .toList(),
+                  isReceived: false,
+                ),
+                _buildAddedMoneyEmpty(),
               ],
             ),
     );
   }
 
-Widget _buildAllTransactions() {
-  final filtered = _applySearch(payments);
-  if (filtered.isEmpty && dummyBills.isEmpty) return _buildEmpty();
+  Widget _buildAllTransactions() {
+    final filtered = _applySearch(payments);
+    if (filtered.isEmpty && dummyBills.isEmpty && dummyRecharges.isEmpty) {
+      return _buildEmpty();
+    }
 
-  return ListView(
-    padding: const EdgeInsets.all(16),
-    children: [
-      // Real payments
-      if (filtered.isNotEmpty) ...[
-        _groupHeader('Payments'),
-        ...filtered.map((p) {
-          final isSender = p['sender_user_id'] == widget.userId;
-          return _transactionCard({
-            'name': isSender ? 'Money Sent' : 'Money Received',
-            'sub': p['description']?.toString().isNotEmpty == true
-                ? p['description']
-                : isSender ? 'Paid to user' : 'Money Received',
-            'amount': p['amount']?.toString() ?? '0',
-            'time': _formatTime(p['created_at']),
-            'isCredit': !isSender,
-            'icon': isSender
-                ? Icons.arrow_upward_rounded
-                : Icons.arrow_downward_rounded,
-            'color': isSender
-                ? const Color(0xFFE91E63)
-                : const Color(0xFF00C853),
-            'bg': isSender
-                ? const Color(0xFFFCE4EC)
-                : const Color(0xFFE8F5E9),
-          });
-        }),
-      ],
+    // Date-bucket helpers
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final yesterdayStart = todayStart.subtract(const Duration(days: 1));
+    final thisWeekStart = todayStart.subtract(Duration(days: now.weekday - 1));
+    final lastWeekStart = thisWeekStart.subtract(const Duration(days: 7));
 
-      // Dummy bills
-      _groupHeader('Bill Payments'),
-      ...dummyBills.map((b) => _transactionCard({
-        'name': b['name'],
-        'sub': 'Bill Payment',
-        'amount': b['amount'],
-        'time': b['time'],
-        'isCredit': false,
-        'icon': b['icon'],
-        'color': b['color'],
-        'bg': (b['color'] as Color).withOpacity(0.1),
-      })),
+    final List<dynamic> todayItems = [];
+    final List<dynamic> yesterdayItems = [];
+    final List<dynamic> thisWeekItems = [];
+    final List<dynamic> lastWeekItems = [];
+    final List<dynamic> olderItems = [];
 
-      // Dummy recharges
-      _groupHeader('Recharges'),
-      ...dummyRecharges.map((r) => _transactionCard({
-        'name': r['name'],
-        'sub': 'Recharge',
-        'amount': r['amount'],
-        'time': r['time'],
-        'isCredit': false,
-        'icon': r['icon'],
-        'color': r['color'],
-        'bg': (r['color'] as Color).withOpacity(0.1),
-      })),
-    ],
-  );
-}
+    for (final p in filtered) {
+      DateTime? dt;
+      try {
+        if (p['created_at'] != null) {
+          dt = DateTime.parse(p['created_at'].toString());
+        }
+      } catch (_) {}
 
-Widget _groupHeader(String title) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 8, top: 4),
-    child: Text(
-      title.toUpperCase(),
-      style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: Colors.black38,
-          letterSpacing: 0.8),
-    ),
-  );
-}
+      if (dt == null) {
+        olderItems.add(p);
+      } else if (!dt.isBefore(todayStart)) {
+        todayItems.add(p);
+      } else if (!dt.isBefore(yesterdayStart)) {
+        yesterdayItems.add(p);
+      } else if (!dt.isBefore(thisWeekStart)) {
+        thisWeekItems.add(p);
+      } else if (!dt.isBefore(lastWeekStart)) {
+        lastWeekItems.add(p);
+      } else {
+        olderItems.add(p);
+      }
+    }
 
-Widget _buildPaymentsList(List<dynamic> list, {required bool isReceived}) {
-  final filtered = _applySearch(list);
-  if (filtered.isEmpty) return _buildEmpty();
-  return ListView.builder(
-    padding: const EdgeInsets.all(16),
-    itemCount: filtered.length,
-    itemBuilder: (context, index) {
-      final p = filtered[index];
-      final desc = p['description']?.toString() ?? '';
+    Widget paymentCard(dynamic p) {
+      final isSender = p['sender_user_id'] == widget.userId;
       return _transactionCard({
-        'name': isReceived ? 'Money Received' : 'Money Sent',
-        'sub': desc.isNotEmpty ? desc : (isReceived ? 'Money Received' : 'Money Sent'),
-          'amount': p['amount']?.toString() ?? '0',
-          'time': _formatTime(p['created_at']),
-          'isCredit': isReceived,
-          'icon': isReceived ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-          'color': isReceived ? const Color(0xFF00C853) : const Color(0xFFE91E63),
-          'bg': isReceived ? const Color(0xFFE8F5E9) : const Color(0xFFFCE4EC),
+        'name': isSender ? 'Money Sent' : 'Money Received',
+        'sub': p['description']?.toString().isNotEmpty == true
+            ? p['description']
+            : isSender
+                ? 'Paid to user'
+                : 'Money Received',
+        'amount': p['amount']?.toString() ?? '0',
+        'time': _formatTime(p['created_at']),
+        'isCredit': !isSender,
+        'isPayment': true,
+        'icon': isSender
+            ? Icons.arrow_upward_rounded
+            : Icons.arrow_downward_rounded,
+      });
+    }
+
+    Widget billCard(Map<String, dynamic> b) => _transactionCard({
+          'name': b['name'],
+          'sub': 'Bill Payment',
+          'amount': b['amount'],
+          'time': b['time'],
+          'isCredit': false,
+          'isPayment': false,
+          'icon': b['icon'],
+          'billColor': b['color'],
         });
-      },
+
+    Widget rechargeCard(Map<String, dynamic> r) => _transactionCard({
+          'name': r['name'],
+          'sub': 'Recharge',
+          'amount': r['amount'],
+          'time': r['time'],
+          'isCredit': false,
+          'isPayment': false,
+          'icon': r['icon'],
+          'billColor': r['color'],
+        });
+
+    final List<Widget> sectionWidgets = [];
+
+    if (todayItems.isNotEmpty) {
+      sectionWidgets.add(_groupHeader('Today'));
+      sectionWidgets.addAll(todayItems.map(paymentCard));
+    }
+
+    // Yesterday: real payments + dummyBills
+    final bool hasYesterday = yesterdayItems.isNotEmpty || dummyBills.isNotEmpty;
+    if (hasYesterday) {
+      sectionWidgets.add(_groupHeader('Yesterday'));
+      sectionWidgets.addAll(yesterdayItems.map(paymentCard));
+      sectionWidgets.addAll(dummyBills.map(billCard));
+    }
+
+    // This Week: real payments + dummyRecharges
+    final bool hasThisWeek = thisWeekItems.isNotEmpty || dummyRecharges.isNotEmpty;
+    if (hasThisWeek) {
+      sectionWidgets.add(_groupHeader('This Week'));
+      sectionWidgets.addAll(thisWeekItems.map(paymentCard));
+      sectionWidgets.addAll(dummyRecharges.map(rechargeCard));
+    }
+
+    if (lastWeekItems.isNotEmpty) {
+      sectionWidgets.add(_groupHeader('Last Week'));
+      sectionWidgets.addAll(lastWeekItems.map(paymentCard));
+    }
+
+    if (olderItems.isNotEmpty) {
+      sectionWidgets.add(_groupHeader('Older'));
+      sectionWidgets.addAll(olderItems.map(paymentCard));
+    }
+
+    if (sectionWidgets.isEmpty) return _buildEmpty();
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      children: sectionWidgets,
     );
   }
 
-  Widget _buildSpecialList(List<Map<String, dynamic>> list, String type) {
-    if (list.isEmpty) return _buildEmpty();
+  Widget _groupHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, top: 16),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: textSecondary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentsList(List<dynamic> list, {required bool isReceived}) {
+    final filtered = _applySearch(list);
+    if (filtered.isEmpty) return _buildEmpty();
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: list.length,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      itemCount: filtered.length,
       itemBuilder: (context, index) {
-        final item = list[index];
+        final p = filtered[index];
+        final desc = p['description']?.toString() ?? '';
         return _transactionCard({
-          'name': item['name'],
-          'sub': type == 'bills' ? 'Bill Payment' : 'Recharge',
-          'amount': item['amount'],
-          'time': item['time'],
-          'isCredit': false,
-          'icon': item['icon'],
-          'color': item['color'],
-          'bg': (item['color'] as Color).withOpacity(0.1),
+          'name': isReceived ? 'Money Received' : 'Money Sent',
+          'sub': desc.isNotEmpty
+              ? desc
+              : (isReceived ? 'Money Received' : 'Money Sent'),
+          'amount': p['amount']?.toString() ?? '0',
+          'time': _formatTime(p['created_at']),
+          'isCredit': isReceived,
+          'isPayment': true,
+          'icon': isReceived
+              ? Icons.arrow_downward_rounded
+              : Icons.arrow_upward_rounded,
         });
       },
     );
@@ -298,84 +371,116 @@ Widget _buildPaymentsList(List<dynamic> list, {required bool isReceived}) {
 
   Widget _transactionCard(Map<String, dynamic> item) {
     final isCredit = item['isCredit'] as bool;
-    final color = item['color'] as Color;
-    final bg = item['bg'] as Color;
+    final bool isPayment = item['isPayment'] as bool? ?? true;
+    final IconData icon = item['icon'] as IconData;
+
+    // Determine icon bg/color
+    Color iconBg;
+    Color iconColor;
+    if (isPayment) {
+      if (isCredit) {
+        iconBg = const Color(0xFFDCFCE7);
+        iconColor = colorGreen;
+      } else {
+        iconBg = const Color(0xFFEFF6FF);
+        iconColor = primary;
+      }
+    } else {
+      // Bill or recharge — use per-item color tinted
+      final billColor = item['billColor'] as Color? ?? primary;
+      iconBg = billColor.withValues(alpha: 0.12);
+      iconColor = billColor;
+    }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
       ),
       child: Row(
         children: [
           Container(
-            width: 46, height: 46,
-            decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-            child: Icon(item['icon'] as IconData, color: color, size: 22),
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+            child: Icon(icon, color: iconColor, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item['name'] as String,
-                    style: const TextStyle(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14)),
+                Text(
+                  item['name'] as String,
+                  style: const TextStyle(
+                    color: textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
                 const SizedBox(height: 3),
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: const Color(0xFFF3F4F6),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Text(item['sub'] as String,
-                          style: const TextStyle(color: Colors.black45, fontSize: 10)),
+                      child: Text(
+                        item['sub'] as String,
+                        style: const TextStyle(
+                            color: textSecondary, fontSize: 10),
+                      ),
                     ),
                     const SizedBox(width: 6),
-                    Text(item['time'] as String,
-                        style: const TextStyle(color: Colors.black38, fontSize: 11)),
+                    Text(
+                      item['time'] as String,
+                      style: const TextStyle(
+                          color: textSecondary, fontSize: 11),
+                    ),
                   ],
                 ),
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${isCredit ? '+' : '-'}₹${item['amount']}',
-                style: TextStyle(
-                    color: isCredit ? const Color(0xFF00C853) : const Color(0xFFE91E63),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEAF3DE),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text('Paid',
-                    style: TextStyle(
-                        color: Color(0xFF3B6D11),
-                        fontSize: 9,
-                        fontWeight: FontWeight.w500)),
-              ),
-            ],
+          Text(
+            '${isCredit ? '+' : '-'}₹${item['amount']}',
+            style: TextStyle(
+              color: isCredit ? colorGreen : colorRed,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddedMoneyEmpty() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.account_balance_wallet_rounded,
+              size: 72, color: primary.withValues(alpha: 0.18)),
+          const SizedBox(height: 16),
+          const Text(
+            'No top-ups yet',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: textSecondary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Money added to your wallet will appear here',
+            style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF)),
           ),
         ],
       ),
@@ -387,10 +492,17 @@ Widget _buildPaymentsList(List<dynamic> list, {required bool isReceived}) {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.receipt_long_rounded, size: 80, color: Colors.grey.shade300),
+          Icon(Icons.receipt_long_rounded,
+              size: 72, color: primary.withValues(alpha: 0.18)),
           const SizedBox(height: 16),
-          const Text('No transactions yet',
-              style: TextStyle(fontSize: 16, color: Colors.black45)),
+          const Text(
+            'No transactions yet',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: textSecondary,
+            ),
+          ),
         ],
       ),
     );
@@ -402,9 +514,15 @@ Widget _buildPaymentsList(List<dynamic> list, {required bool isReceived}) {
       final dt = DateTime.parse(createdAt.toString());
       final now = DateTime.now();
       final diff = now.difference(dt);
-      if (diff.inMinutes < 60) return 'Today, ${dt.hour}:${dt.minute.toString().padLeft(2, '0')} ${dt.hour < 12 ? 'AM' : 'PM'}';
-      if (diff.inDays == 0) return 'Today, ${dt.hour}:${dt.minute.toString().padLeft(2, '0')} ${dt.hour < 12 ? 'AM' : 'PM'}';
-      if (diff.inDays == 1) return 'Yesterday, ${dt.hour}:${dt.minute.toString().padLeft(2, '0')} ${dt.hour < 12 ? 'AM' : 'PM'}';
+      if (diff.inMinutes < 60) {
+        return 'Today, ${dt.hour}:${dt.minute.toString().padLeft(2, '0')} ${dt.hour < 12 ? 'AM' : 'PM'}';
+      }
+      if (diff.inDays == 0) {
+        return 'Today, ${dt.hour}:${dt.minute.toString().padLeft(2, '0')} ${dt.hour < 12 ? 'AM' : 'PM'}';
+      }
+      if (diff.inDays == 1) {
+        return 'Yesterday, ${dt.hour}:${dt.minute.toString().padLeft(2, '0')} ${dt.hour < 12 ? 'AM' : 'PM'}';
+      }
       return '${diff.inDays} days ago';
     } catch (e) {
       return 'Recently';
@@ -415,17 +533,25 @@ Widget _buildPaymentsList(List<dynamic> list, {required bool isReceived}) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: Colors.white,
       builder: (_) => Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Filter Transactions',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Filter Transactions',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: textPrimary),
+            ),
             const SizedBox(height: 16),
-            _filterChips('Date Range', ['Today', 'This Week', 'This Month', 'Custom']),
+            _filterChips(
+                'Date Range', ['Today', 'This Week', 'This Month', 'Custom']),
             const SizedBox(height: 12),
             _filterChips('Amount', ['< ₹500', '₹500-2000', '> ₹2000']),
             const SizedBox(height: 20),
@@ -435,12 +561,16 @@ Widget _buildPaymentsList(List<dynamic> list, {required bool isReceived}) {
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: purple,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  backgroundColor: primary,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   elevation: 0,
                 ),
-                child: const Text('Apply Filter',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Apply Filter',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -453,22 +583,32 @@ Widget _buildPaymentsList(List<dynamic> list, {required bool isReceived}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+        Text(label,
+            style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: textPrimary)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
-          children: options.map((opt) => GestureDetector(
-            onTap: () {},
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0F0FF),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Text(opt, style: const TextStyle(color: purple, fontSize: 12)),
-            ),
-          )).toList(),
+          runSpacing: 6,
+          children: options
+              .map((opt) => GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: borderColor),
+                      ),
+                      child: Text(opt,
+                          style: const TextStyle(
+                              color: primary, fontSize: 12)),
+                    ),
+                  ))
+              .toList(),
         ),
       ],
     );

@@ -26,7 +26,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   static const Color bgPage = Color(0xFFF2F4F7);
   static const Color bgCard = Color(0xFFFFFFFF);
-  static const Color purple = Color(0xFF6C63FF);
+  static const Color purple = Color(0xFF2563EB);
   static const Color textDark = Color(0xFF1A202C);
   static const Color textLight = Color(0xFF718096);
 
@@ -136,12 +136,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF2D3748), Color(0xFF4A5568)],
+                  colors: [Color(0xFF1D4ED8), Color(0xFF2563EB)],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 15,
                     offset: const Offset(0, 6),
                   ),
@@ -155,10 +155,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Container(
                         width: 60, height: 60,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                           border: Border.all(
-                              color: Colors.white.withOpacity(0.4), width: 2),
+                              color: Colors.white.withValues(alpha: 0.4), width: 2),
                         ),
                         child: _profileImage != null
                             ? ClipOval(
@@ -208,21 +208,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                       email.isEmpty ? 'user@obpay.com' : email,
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.7), fontSize: 12)),
+                          color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
                   const SizedBox(height: 2),
                   Text(
                       _phone.isEmpty
                           ? (widget.phone.isEmpty ? 'No phone' : '+91 ${widget.phone}')
                           : '+91 $_phone',
                       style: TextStyle(
-                          color: Colors.white.withOpacity(0.7), fontSize: 12)),
+                          color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
                   const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.2),
+                      color: Colors.green.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.green.withOpacity(0.4)),
+                      border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -252,7 +252,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                      color: Colors.black.withOpacity(0.04), blurRadius: 10)
+                      color: Colors.black.withValues(alpha: 0.04), blurRadius: 10)
                 ],
               ),
               child: Row(
@@ -276,7 +276,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _navTile(
                 icon: Icons.person_rounded,
                 color: purple,
-                bg: const Color(0xFFEEEDFE),
+                bg: const Color(0xFFEFF6FF),
                 title: 'Profile & Personal Information',
                 subtitle: 'Update your personal details',
                 onTap: () => _showEditProfile(),
@@ -293,8 +293,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _divider(),
               _navTile(
                 icon: Icons.security_rounded,
-                color: const Color(0xFF3D5AF1),
-                bg: const Color(0xFFEEEDFE),
+                color: const Color(0xFF2563EB),
+                bg: const Color(0xFFEFF6FF),
                 title: 'Security & Privacy',
                 subtitle: 'Password, PIN, Biometrics',
                 onTap: () => _showChangePIN(),
@@ -330,7 +330,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _navTile(
                 icon: Icons.help_rounded,
                 color: purple,
-                bg: const Color(0xFFEEEDFE),
+                bg: const Color(0xFFEFF6FF),
                 title: 'Help & Support',
                 subtitle: 'Get help, chat with us',
                 onTap: () => _showSupport(),
@@ -338,8 +338,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _divider(),
               _navTile(
                 icon: Icons.info_rounded,
-                color: const Color(0xFF3D5AF1),
-                bg: const Color(0xFFEEEDFE),
+                color: const Color(0xFF2563EB),
+                bg: const Color(0xFFEFF6FF),
                 title: 'About OB Pay',
                 subtitle: 'App version 1.0.0',
                 onTap: () {},
@@ -434,16 +434,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _photoOption(IconData icon, String label, VoidCallback onTap,
-      {Color color = const Color(0xFF6C63FF)}) {
+      {Color color = const Color(0xFF2563EB)}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -641,7 +641,7 @@ void _showLinkBankAccount() {
                         child: ElevatedButton(
                           onPressed: () => Navigator.pop(ctx),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6C63FF),
+                            backgroundColor: const Color(0xFF2563EB),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12)),
                             elevation: 0,
@@ -772,7 +772,7 @@ void _showLinkBankAccount() {
                             child: ChoiceChip(
                               label: Text(type),
                               selected: selected,
-                              selectedColor: const Color(0xFF6C63FF),
+                              selectedColor: const Color(0xFF2563EB),
                               labelStyle: TextStyle(
                                 color: selected
                                     ? Colors.white
@@ -864,7 +864,7 @@ void _showLinkBankAccount() {
                                   });
                                 },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6C63FF),
+                            backgroundColor: const Color(0xFF2563EB),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14)),
                             elevation: 0,
@@ -924,11 +924,11 @@ void _showLinkBankAccount() {
                       Container(
                         width: 36, height: 36,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
+                          color: const Color(0xFF2563EB).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(Icons.qr_code_rounded,
-                            color: Color(0xFF6C63FF), size: 18),
+                            color: Color(0xFF2563EB), size: 18),
                       ),
                       const SizedBox(width: 10),
                       const Text('UPI ID',
@@ -943,7 +943,7 @@ void _showLinkBankAccount() {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFF6C63FF).withValues(alpha: 0.3)),
+                      border: Border.all(color: const Color(0xFF2563EB).withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
@@ -955,7 +955,7 @@ void _showLinkBankAccount() {
                           ),
                         ),
                         const Icon(Icons.copy_rounded,
-                            color: Color(0xFF6C63FF), size: 18),
+                            color: Color(0xFF2563EB), size: 18),
                       ],
                     ),
                   ),
@@ -1012,7 +1012,7 @@ void _showLinkBankAccount() {
                           label: const Text('Link Bank Account',
                               style: TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6C63FF),
+                            backgroundColor: const Color(0xFF2563EB),
                             elevation: 0,
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10)),
@@ -1055,7 +1055,7 @@ void _showLinkBankAccount() {
               _notifTile(
                 ctx, setModalState,
                 icon: Icons.payment_rounded,
-                color: const Color(0xFF6C63FF),
+                color: const Color(0xFF2563EB),
                 title: 'Payment Alerts',
                 subtitle: 'Get notified for every payment sent or received',
                 value: _notifPayments,
@@ -1079,7 +1079,7 @@ void _showLinkBankAccount() {
               _notifTile(
                 ctx, setModalState,
                 icon: Icons.security_rounded,
-                color: const Color(0xFF3D5AF1),
+                color: const Color(0xFF2563EB),
                 title: 'Security Alerts',
                 subtitle: 'Login attempts and security updates',
                 value: _notifSecurity,
@@ -1114,7 +1114,7 @@ void _showLinkBankAccount() {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6C63FF),
+                    backgroundColor: const Color(0xFF2563EB),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
@@ -1177,8 +1177,8 @@ void _showLinkBankAccount() {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: const Color(0xFF6C63FF),
-            activeTrackColor: const Color(0xFF6C63FF).withValues(alpha: 0.4),
+            activeThumbColor: const Color(0xFF2563EB),
+            activeTrackColor: const Color(0xFF2563EB).withValues(alpha: 0.4),
           ),
         ],
       ),
@@ -1201,7 +1201,7 @@ void _showLinkBankAccount() {
             const SizedBox(height: 16),
             _supportTile(
               Icons.help_center_rounded,
-              const Color(0xFF6C63FF),
+              const Color(0xFF2563EB),
               'Help Center',
               'Browse guides and tutorials',
               onTap: () async {
@@ -1308,7 +1308,7 @@ void _showLinkBankAccount() {
 
   Widget _vDivider() {
     return Container(
-        height: 40, width: 1, color: Colors.grey.withOpacity(0.2));
+        height: 40, width: 1, color: Colors.grey.withValues(alpha: 0.2));
   }
 
   Widget _editField(String label, TextEditingController controller, IconData icon,
@@ -1323,7 +1323,7 @@ void _showLinkBankAccount() {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF2563EB), width: 2),
         ),
       ),
     );
@@ -1349,7 +1349,7 @@ void _showLinkBankAccount() {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 3))
         ],
@@ -1406,6 +1406,6 @@ void _showLinkBankAccount() {
 
   Widget _divider() {
     return Divider(
-        height: 1, indent: 66, color: Colors.grey.withOpacity(0.1));
+        height: 1, indent: 66, color: Colors.grey.withValues(alpha: 0.1));
   }
 }
