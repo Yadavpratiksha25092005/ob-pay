@@ -30,15 +30,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
   static const Color textDark = Color(0xFF1A202C);
   static const Color textLight = Color(0xFF718096);
 
-  String email = 'user@obpay.com';
+  String email = 'Loading...';
+  String _phone = '';
   String _kycStatus = 'pending';
   File? _profileImage;
   final ImagePicker _picker = ImagePicker();
 
+  // Notification toggles
+  bool _notifPayments = true;
+  bool _notifOffers = true;
+  bool _notifSecurity = true;
+  bool _notifUpdates = false;
+
   @override
   void initState() {
     super.initState();
+    _loadUserProfile();
     _loadKycStatus();
+  }
+
+  Future<void> _loadUserProfile() async {
+    final user = await ApiService.getUser(widget.userId);
+    if (mounted && user.isNotEmpty) {
+      setState(() {
+        email = (user['email'] as String? ?? '').isNotEmpty
+            ? user['email'] as String
+            : 'user@obpay.com';
+        _phone = (user['phone'] as String? ?? widget.phone).isNotEmpty
+            ? (user['phone'] as String? ?? widget.phone)
+            : widget.phone;
+      });
+    }
   }
 
   Future<void> _loadKycStatus() async {
@@ -189,11 +211,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fontSize: 20,
                           fontWeight: FontWeight.bold)),
                   const SizedBox(height: 2),
-                  Text(email,
+                  Text(
+                      email.isEmpty ? 'user@obpay.com' : email,
                       style: TextStyle(
                           color: Colors.white.withOpacity(0.7), fontSize: 12)),
                   const SizedBox(height: 2),
-                  Text(widget.phone.isEmpty ? 'No phone' : '+91 ${widget.phone}',
+                  Text(
+                      _phone.isEmpty
+                          ? (widget.phone.isEmpty ? 'No phone' : '+91 ${widget.phone}')
+                          : '+91 $_phone',
                       style: TextStyle(
                           color: Colors.white.withOpacity(0.7), fontSize: 12)),
                   const SizedBox(height: 10),
@@ -268,7 +294,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 bg: const Color(0xFFE8F5E9),
                 title: 'Bank Accounts & UPI',
                 subtitle: 'Manage your linked accounts',
-                onTap: () {},
+                onTap: () => _showBankUPI(),
               ),
               _divider(),
               _navTile(
@@ -286,7 +312,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 bg: const Color(0xFFFFF3E0),
                 title: 'Notification Settings',
                 subtitle: 'Manage your alerts & updates',
-                onTap: () {},
+                onTap: () => _showNotificationSettings(),
               ),
               _divider(),
               _navTile(
@@ -314,15 +340,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title: 'Help & Support',
                 subtitle: 'Get help, chat with us',
                 onTap: () => _showSupport(),
-              ),
-              _divider(),
-              _navTile(
-                icon: Icons.quiz_rounded,
-                color: const Color(0xFF00897B),
-                bg: const Color(0xFFE0F2F1),
-                title: 'FAQs',
-                subtitle: 'Find answers to common questions',
-                onTap: () {},
               ),
               _divider(),
               _navTile(
@@ -576,7 +593,295 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-void _showSupport() {
+void _showBankUPI() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Bank Accounts & UPI',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            const Text('Manage your linked bank accounts and UPI IDs',
+                style: TextStyle(color: Color(0xFF718096), fontSize: 13)),
+            const SizedBox(height: 20),
+            // UPI ID section
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 36, height: 36,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.qr_code_rounded,
+                            color: Color(0xFF6C63FF), size: 18),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text('UPI ID',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 14)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFF6C63FF).withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${_phone.isNotEmpty ? _phone : widget.phone}@obpay',
+                            style: const TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                        const Icon(Icons.copy_rounded,
+                            color: Color(0xFF6C63FF), size: 18),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Bank Account section
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 36, height: 36,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF48BB78).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.account_balance_rounded,
+                            color: Color(0xFF48BB78), size: 18),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text('Linked Bank Accounts',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 14)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: Column(
+                      children: [
+                        Icon(Icons.account_balance_outlined,
+                            size: 40, color: Colors.grey.shade300),
+                        const SizedBox(height: 8),
+                        const Text('No bank account linked',
+                            style: TextStyle(
+                                color: Color(0xFF718096), fontSize: 13)),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.add_rounded, size: 18),
+                          label: const Text('Link Bank Account'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF6C63FF),
+                            side: const BorderSide(color: Color(0xFF6C63FF)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showNotificationSettings() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setModalState) => Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Notification Settings',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              const Text('Choose which notifications you want to receive',
+                  style: TextStyle(color: Color(0xFF718096), fontSize: 13)),
+              const SizedBox(height: 20),
+              _notifTile(
+                ctx, setModalState,
+                icon: Icons.payment_rounded,
+                color: const Color(0xFF6C63FF),
+                title: 'Payment Alerts',
+                subtitle: 'Get notified for every payment sent or received',
+                value: _notifPayments,
+                onChanged: (v) {
+                  setModalState(() => _notifPayments = v);
+                  setState(() => _notifPayments = v);
+                },
+              ),
+              _notifTile(
+                ctx, setModalState,
+                icon: Icons.local_offer_rounded,
+                color: const Color(0xFFED8936),
+                title: 'Offers & Cashback',
+                subtitle: 'Promotional offers and cashback alerts',
+                value: _notifOffers,
+                onChanged: (v) {
+                  setModalState(() => _notifOffers = v);
+                  setState(() => _notifOffers = v);
+                },
+              ),
+              _notifTile(
+                ctx, setModalState,
+                icon: Icons.security_rounded,
+                color: const Color(0xFF3D5AF1),
+                title: 'Security Alerts',
+                subtitle: 'Login attempts and security updates',
+                value: _notifSecurity,
+                onChanged: (v) {
+                  setModalState(() => _notifSecurity = v);
+                  setState(() => _notifSecurity = v);
+                },
+              ),
+              _notifTile(
+                ctx, setModalState,
+                icon: Icons.system_update_rounded,
+                color: const Color(0xFF00897B),
+                title: 'App Updates',
+                subtitle: 'New features and app announcements',
+                value: _notifUpdates,
+                onChanged: (v) {
+                  setModalState(() => _notifUpdates = v);
+                  setState(() => _notifUpdates = v);
+                },
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Notification preferences saved!'),
+                          backgroundColor: Color(0xFF48BB78)),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6C63FF),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                  child: const Text('Save Preferences',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _notifTile(
+    BuildContext ctx,
+    StateSetter setModalState, {
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38, height: 38,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w500, fontSize: 14)),
+                Text(subtitle,
+                    style: const TextStyle(
+                        color: Color(0xFF718096), fontSize: 11)),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeThumbColor: const Color(0xFF6C63FF),
+            activeTrackColor: const Color(0xFF6C63FF).withValues(alpha: 0.4),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSupport() {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(

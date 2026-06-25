@@ -12,7 +12,6 @@ import 'kyc_screen.dart';
 import 'qr_scanner_screen.dart';
 import 'notification_screen.dart';
 import 'settings_screen.dart';
-import 'contacts_screen.dart';
 import 'main.dart' show themeNotifier;
 
 class PremiumHomeScreen extends StatefulWidget {
@@ -458,7 +457,6 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
       {'icon': Icons.add_circle_rounded, 'label': 'Add Money', 'color': const Color(0xFFFF9800), 'bg': const Color(0xFFFFF3E0), 'screen': 'add'},
       {'icon': Icons.history_rounded, 'label': 'History', 'color': const Color(0xFFE91E63), 'bg': const Color(0xFFFCE4EC), 'screen': 'history'},
       {'icon': Icons.receipt_rounded, 'label': 'Bills', 'color': const Color(0xFF009688), 'bg': const Color(0xFFE0F2F1), 'screen': 'bills'},
-      {'icon': Icons.people_rounded, 'label': 'Contacts', 'color': const Color(0xFF00897B), 'bg': const Color(0xFFE0F2F1), 'screen': 'contacts'},
       {'icon': Icons.verified_user_rounded, 'label': 'KYC', 'color': const Color(0xFF9C27B0), 'bg': const Color(0xFFF3E5F5), 'screen': 'kyc'},
     ];
 
@@ -492,9 +490,6 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
                 } else if (screen == 'bills' || screen == 'recharge') {
                   Navigator.push(context, MaterialPageRoute(
                       builder: (_) => BillsScreen(userId: widget.userId)));
-                } else if (screen == 'contacts') {
-                  Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => ContactsScreen(userId: widget.userId)));
                 } else if (screen == 'kyc') {
                   Navigator.push(context, MaterialPageRoute(
                       builder: (_) => KYCScreen(userId: widget.userId)));

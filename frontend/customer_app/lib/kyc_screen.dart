@@ -25,7 +25,11 @@ class _KYCScreenState extends State<KYCScreen> {
   bool otpSent = false;
   bool aadhaarVerified = false;
 
-  // Step 3 - Selfie
+  // Step 3 - PAN
+  final panController = TextEditingController();
+  bool panVerified = false;
+
+  // Step 4 - Selfie
   bool selfieUploaded = false;
 
   Future<void> sendAadhaarOTP() async {
@@ -70,8 +74,26 @@ class _KYCScreenState extends State<KYCScreen> {
     });
   }
 
+  Future<void> verifyPAN() async {
+    final pan = panController.text.trim().toUpperCase();
+    if (!RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]$').hasMatch(pan)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid PAN (e.g. ABCDE1234F)')),
+      );
+      return;
+    }
+    setState(() => isLoading = true);
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+        panVerified = true;
+      });
+    }
+  }
+
   void nextStep() {
-    if (currentStep < 2) {
+    if (currentStep < 3) {
       setState(() => currentStep++);
     }
   }
@@ -99,7 +121,7 @@ class _KYCScreenState extends State<KYCScreen> {
             padding: const EdgeInsets.all(16),
             color: const Color(0xFF6C63FF).withValues(alpha: 0.05),
             child: Row(
-              children: List.generate(3, (index) {
+              children: List.generate(4, (index) {
                 return Expanded(
                   child: Row(
                     children: [
@@ -119,7 +141,7 @@ class _KYCScreenState extends State<KYCScreen> {
                           ),
                         ),
                       ),
-                      if (index < 2)
+                      if (index < 3)
                         Expanded(
                           child: Container(
                             height: 2,
@@ -143,7 +165,8 @@ class _KYCScreenState extends State<KYCScreen> {
               children: [
                 _StepLabel('Personal', currentStep >= 0),
                 _StepLabel('Aadhaar', currentStep >= 1),
-                _StepLabel('Selfie', currentStep >= 2),
+                _StepLabel('PAN', currentStep >= 2),
+                _StepLabel('Selfie', currentStep >= 3),
               ],
             ),
           ),
@@ -155,6 +178,7 @@ class _KYCScreenState extends State<KYCScreen> {
               child: [
                 _buildPersonalStep(),
                 _buildAadhaarStep(),
+                _buildPANStep(),
                 _buildSelfieStep(),
               ][currentStep],
             ),
@@ -183,7 +207,7 @@ class _KYCScreenState extends State<KYCScreen> {
                 if (currentStep > 0) const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: currentStep == 2
+                    onPressed: currentStep == 3
                         ? () {
                             if (selfieUploaded) {
                               showDialog(
@@ -214,7 +238,7 @@ class _KYCScreenState extends State<KYCScreen> {
                       ),
                     ),
                     child: Text(
-                      currentStep == 2 ? 'Submit KYC' : 'Next',
+                      currentStep == 3 ? 'Submit KYC' : 'Next',
                       style: const TextStyle(
                           fontSize: 16, color: Colors.white),
                     ),
@@ -386,6 +410,102 @@ class _KYCScreenState extends State<KYCScreen> {
               ),
             ),
           ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPANStep() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('PAN Verification',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        const Text('PAN card is required for KYC compliance',
+            style: TextStyle(color: Colors.grey)),
+        const SizedBox(height: 20),
+
+        if (panVerified)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.verified, color: Colors.green),
+                SizedBox(width: 8),
+                Text('PAN Verified Successfully!',
+                    style: TextStyle(
+                        color: Colors.green, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          )
+        else ...[
+          TextField(
+            controller: panController,
+            textCapitalization: TextCapitalization.characters,
+            keyboardType: TextInputType.text,
+            maxLength: 10,
+            decoration: InputDecoration(
+              labelText: 'PAN Number (e.g. ABCDE1234F)',
+              prefixIcon: const Icon(Icons.credit_card),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              helperText: '5 letters · 4 digits · 1 letter',
+            ),
+            onChanged: (v) {
+              panController.value = panController.value.copyWith(
+                text: v.toUpperCase(),
+                selection: TextSelection.collapsed(offset: v.length),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: isLoading ? null : verifyPAN,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6C63FF),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text('Verify PAN',
+                      style: TextStyle(color: Colors.white, fontSize: 15)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF8E1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFFFE082)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline_rounded,
+                    color: Color(0xFFF9A825), size: 18),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Required for transactions above ₹50,000 as per RBI guidelines.',
+                    style: TextStyle(
+                        color: Color(0xFF795548), fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ],
     );
