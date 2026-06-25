@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'api_service.dart';
+import 'theme_toggle.dart';
 
 class WalletScreen extends StatefulWidget {
   final String userId;
@@ -129,6 +130,8 @@ class _WalletScreenState extends State<WalletScreen>
                       fontSize: 18,
                       fontWeight: FontWeight.bold)),
               actions: [
+                 ThemeToggleButton(),
+  SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.history_rounded, color: Color(0xFF6C63FF)),
                   onPressed: () {},

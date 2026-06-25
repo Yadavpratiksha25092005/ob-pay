@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'theme_toggle.dart';
 
 class RewardsScreen extends StatefulWidget {
   final String userId;
@@ -99,6 +100,8 @@ class _RewardsScreenState extends State<RewardsScreen> {
         title: const Text('Rewards',
             style: TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
         actions: [
+          ThemeToggleButton(),
+  SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: Color(0xFF6C63FF)),
             onPressed: loadData,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'theme_toggle.dart';
 
 class BillsScreen extends StatefulWidget {
   final String userId;
@@ -35,18 +36,22 @@ class _BillsScreenState extends State<BillsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F4F7),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF6C63FF),
-        title: Text(selectedCategory ?? 'Bill Payments',
-            style: const TextStyle(color: Colors.white)),
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-        leading: selectedCategory != null
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-                onPressed: () => setState(() => selectedCategory = null),
-              )
-            : null,
-      ),
+  backgroundColor: const Color(0xFF6C63FF),
+  title: Text(selectedCategory ?? 'Bill Payments',
+      style: const TextStyle(color: Colors.white)),
+  iconTheme: const IconThemeData(color: Colors.white),
+  elevation: 0,
+  leading: selectedCategory != null
+      ? IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          onPressed: () => setState(() => selectedCategory = null),
+        )
+      : null,
+  actions: const [
+    ThemeToggleButton(),
+    SizedBox(width: 8),
+  ],
+),
       body: selectedCategory == null
           ? _buildHome()
           : selectedCategory == 'Mobile Recharge'

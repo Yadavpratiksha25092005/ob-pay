@@ -5,7 +5,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'auth_screen.dart';
 import 'kyc_screen.dart';
+<<<<<<< HEAD
 import 'api_service.dart';
+=======
+import 'theme_toggle.dart';
+>>>>>>> 1599325dc4419b4965a88810dc274c34cfc0e110
 
 class ProfileScreen extends StatefulWidget {
   final String userId;
@@ -123,6 +127,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: Color(0xFF1A202C),
                 fontSize: 18,
                 fontWeight: FontWeight.bold)),
+<<<<<<< HEAD
+=======
+        actions: [
+           ThemeToggleButton(),
+  SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, color: Color(0xFF6C63FF)),
+            onPressed: () {},
+          ),
+        ],
+>>>>>>> 1599325dc4419b4965a88810dc274c34cfc0e110
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'wallet_screen.dart';
+import 'theme_toggle.dart';
 
 class QRScannerScreen extends StatefulWidget {
   final String userId;
@@ -65,6 +66,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 fontSize: 18,
                 fontWeight: FontWeight.bold)),
         actions: [
+            ThemeToggleButton(),
+  SizedBox(width: 8),
           // Torch
           IconButton(
             icon: Icon(
