@@ -105,6 +105,41 @@ static Future<Map<String, dynamic>> getAnalytics(String userId, {String period =
   );
   return jsonDecode(response.body);
 }
+
+static Future<Map<String, dynamic>> getUser(String userId) async {
+  try {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$userBaseUrl/api/v1/users/$userId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return data['user'] as Map<String, dynamic>? ?? data;
+    }
+    return {};
+  } catch (_) {
+    return {};
+  }
+}
+
+static Future<String> getKycStatus(String userId) async {
+  try {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$userBaseUrl/api/v1/kyc/status/$userId'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return (data['status'] as String? ?? 'pending').toLowerCase();
+    }
+    return 'pending';
+  } catch (_) {
+    return 'pending';
+  }
+}
+
 static Future<void> saveFCMToken({
   required String userId,
   required String token,

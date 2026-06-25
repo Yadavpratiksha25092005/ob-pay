@@ -123,12 +123,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: Color(0xFF1A202C),
                 fontSize: 18,
                 fontWeight: FontWeight.bold)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, color: Color(0xFF6C63FF)),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -593,7 +587,310 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-void _showBankUPI() {
+void _showLinkBankAccount() {
+    final accountNameCtrl = TextEditingController();
+    final accountNumberCtrl = TextEditingController();
+    final confirmAccountCtrl = TextEditingController();
+    final ifscCtrl = TextEditingController();
+    String selectedAccountType = 'Savings';
+    bool isVerifying = false;
+    bool isLinked = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setSheet) => Padding(
+          padding: EdgeInsets.only(
+            left: 24, right: 24, top: 24,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: SingleChildScrollView(
+            child: isLinked
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 16),
+                      Container(
+                        width: 72, height: 72,
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.green, width: 2),
+                        ),
+                        child: const Icon(Icons.check_rounded,
+                            color: Colors.green, size: 38),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Bank Account Linked!',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${accountNameCtrl.text}\nA/C ending ••••${accountNumberCtrl.text.length > 4 ? accountNumberCtrl.text.substring(accountNumberCtrl.text.length - 4) : accountNumberCtrl.text}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            color: Color(0xFF718096), fontSize: 14),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6C63FF),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
+                          child: const Text('Done',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16)),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  )
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Link Bank Account',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 4),
+                      const Text(
+                          'Enter your bank details to link your account',
+                          style: TextStyle(
+                              color: Color(0xFF718096), fontSize: 13)),
+                      const SizedBox(height: 20),
+
+                      // Account Holder Name
+                      _editField('Account Holder Name', accountNameCtrl,
+                          Icons.person_rounded),
+                      const SizedBox(height: 12),
+
+                      // Bank Name
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade400),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            isExpanded: true,
+                            hint: const Text('Select Bank'),
+                            items: [
+                              'State Bank of India',
+                              'HDFC Bank',
+                              'ICICI Bank',
+                              'Axis Bank',
+                              'Kotak Mahindra Bank',
+                              'Punjab National Bank',
+                              'Bank of Baroda',
+                              'Canara Bank',
+                              'Union Bank of India',
+                              'Other',
+                            ].map((b) => DropdownMenuItem(
+                                  value: b,
+                                  child: Text(b,
+                                      style: const TextStyle(fontSize: 14)),
+                                )).toList(),
+                            onChanged: (_) {},
+                            value: null,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Account Number
+                      TextField(
+                        controller: accountNumberCtrl,
+                        keyboardType: TextInputType.number,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: 'Account Number',
+                          prefixIcon:
+                              const Icon(Icons.account_balance_rounded),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Confirm Account Number
+                      TextField(
+                        controller: confirmAccountCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: 'Confirm Account Number',
+                          prefixIcon: const Icon(Icons.account_balance_rounded),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // IFSC Code
+                      TextField(
+                        controller: ifscCtrl,
+                        textCapitalization: TextCapitalization.characters,
+                        decoration: InputDecoration(
+                          labelText: 'IFSC Code',
+                          prefixIcon: const Icon(Icons.code_rounded),
+                          helperText: 'e.g. SBIN0001234',
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onChanged: (v) {
+                          ifscCtrl.value = ifscCtrl.value.copyWith(
+                            text: v.toUpperCase(),
+                            selection:
+                                TextSelection.collapsed(offset: v.length),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Account Type
+                      const Text('Account Type',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500, fontSize: 13)),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: ['Savings', 'Current'].map((type) {
+                          final selected = selectedAccountType == type;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: ChoiceChip(
+                              label: Text(type),
+                              selected: selected,
+                              selectedColor: const Color(0xFF6C63FF),
+                              labelStyle: TextStyle(
+                                color: selected
+                                    ? Colors.white
+                                    : Colors.black87,
+                                fontWeight: selected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                              onSelected: (_) => setSheet(
+                                  () => selectedAccountType = type),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Info note
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.info_outline_rounded,
+                                color: Color(0xFF388E3C), size: 18),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'A penny drop of ₹1 will be sent to verify your account. It will be refunded within 24 hours.',
+                                style: TextStyle(
+                                    color: Color(0xFF2E7D32), fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: isVerifying
+                              ? null
+                              : () async {
+                                  if (accountNameCtrl.text.trim().isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Enter account holder name')),
+                                    );
+                                    return;
+                                  }
+                                  if (accountNumberCtrl.text.trim().length < 9) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Enter a valid account number')),
+                                    );
+                                    return;
+                                  }
+                                  if (accountNumberCtrl.text !=
+                                      confirmAccountCtrl.text) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Account numbers do not match')),
+                                    );
+                                    return;
+                                  }
+                                  if (!RegExp(r'^[A-Z]{4}0[A-Z0-9]{6}$')
+                                      .hasMatch(ifscCtrl.text.trim())) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Enter a valid IFSC code')),
+                                    );
+                                    return;
+                                  }
+                                  setSheet(() => isVerifying = true);
+                                  await Future.delayed(
+                                      const Duration(seconds: 2));
+                                  setSheet(() {
+                                    isVerifying = false;
+                                    isLinked = true;
+                                  });
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6C63FF),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                            elevation: 0,
+                          ),
+                          child: isVerifying
+                              ? const SizedBox(
+                                  width: 22, height: 22,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2),
+                                )
+                              : const Text('Verify & Link Account',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16)),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showBankUPI() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -705,15 +1002,22 @@ void _showBankUPI() {
                             style: TextStyle(
                                 color: Color(0xFF718096), fontSize: 13)),
                         const SizedBox(height: 12),
-                        OutlinedButton.icon(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.add_rounded, size: 18),
-                          label: const Text('Link Bank Account'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF6C63FF),
-                            side: const BorderSide(color: Color(0xFF6C63FF)),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _showLinkBankAccount();
+                          },
+                          icon: const Icon(Icons.add_rounded,
+                              size: 18, color: Colors.white),
+                          label: const Text('Link Bank Account',
+                              style: TextStyle(color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6C63FF),
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
                           ),
                         ),
                       ],

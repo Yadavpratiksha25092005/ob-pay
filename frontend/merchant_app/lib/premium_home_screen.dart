@@ -12,7 +12,7 @@ import 'notification_screen.dart';
 import 'profile_screen.dart';
 import 'add_money_screen.dart';
 import 'support_screen.dart';
-import 'settings_screen.dart';
+import 'merchant_qr_scanner_screen.dart';
 import 'kyc_screen.dart';
 import 'main.dart' show themeNotifier;
 
@@ -76,7 +76,6 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
     {'icon': Icons.account_balance_rounded, 'label': 'Settlements'},
     {'icon': Icons.trending_up_rounded, 'label': 'Analytics'},
     {'icon': Icons.keyboard_return_rounded, 'label': 'Refunds'},
-    {'icon': Icons.settings_rounded, 'label': 'Settings'},
   ];
 
   @override
@@ -690,17 +689,11 @@ ValueListenableBuilder<ThemeMode>(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Quick Actions',
-                  style: TextStyle(
-                      color: textDark,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold)),
-              Text('View All', style: TextStyle(color: blue, fontSize: 13)),
-            ],
-          ),
+          const Text('Quick Actions',
+              style: TextStyle(
+                  color: textDark,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           GridView.count(
             shrinkWrap: true,
@@ -716,7 +709,11 @@ ValueListenableBuilder<ThemeMode>(
                 onTap: () async {
                   HapticFeedback.lightImpact();
                   final label = action['label'] as String;
-                  if (label == 'My QR') {
+                  if (label == 'Scan QR') {
+                    Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => MerchantQRScannerScreen(
+                            userId: widget.userId)));
+                  } else if (label == 'My QR') {
                     Navigator.push(context, MaterialPageRoute(
                         builder: (_) => QRScreen(
                             userId: widget.userId,
@@ -1302,10 +1299,6 @@ ValueListenableBuilder<ThemeMode>(
                     Navigator.push(context, MaterialPageRoute(
                         builder: (_) =>
                             RefundScreen(userId: widget.userId)));
-                  } else if (label == 'Settings') {
-                    Navigator.push(context, MaterialPageRoute(
-                        builder: (_) => MerchantSettingsScreen(
-                            userId: widget.userId)));
                   }
                 },
                 child: Container(
