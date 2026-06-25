@@ -10,9 +10,8 @@ import 'add_money_screen.dart';
 import 'bills_screen.dart';
 import 'kyc_screen.dart';
 import 'qr_scanner_screen.dart';
+import 'my_qr_screen.dart';
 import 'notification_screen.dart';
-import 'settings_screen.dart';
-import 'main.dart' show themeNotifier;
 
 class PremiumHomeScreen extends StatefulWidget {
   final String userId;
@@ -119,29 +118,47 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
                 ),
               ),
             ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
+      floatingActionButton: GestureDetector(
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          Navigator.push(context, MaterialPageRoute(
+              builder: (_) => QRScannerScreen(userId: widget.userId)));
+        },
+        child: Container(
+          width: 64, height: 64,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
             ),
-          ],
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF11998E).withValues(alpha: 0.5),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.qr_code_scanner_rounded,
+              color: Colors.white, size: 28),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _navItem(0, Icons.home_rounded, 'Home'),
-                _navItem(1, Icons.receipt_long_rounded, 'Transactions'),
-                _scanButton2(),
-                _navItem(3, Icons.person_rounded, 'Profile'),
-              ],
-            ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8,
+        color: Colors.white,
+        elevation: 8,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _navItem(0, Icons.home_rounded, 'Home'),
+              _navItem(1, Icons.receipt_long_rounded, 'Transactions'),
+              const SizedBox(width: 60),
+              _navItem(3, Icons.person_rounded, 'Profile'),
+            ],
           ),
         ),
       ),
@@ -195,33 +212,6 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
     );
   }
 
-  Widget _scanButton2() {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.mediumImpact();
-        Navigator.push(context, MaterialPageRoute(
-            builder: (_) => QRScannerScreen(userId: widget.userId)));
-      },
-      child: Container(
-        width: 56, height: 56,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF11998E), Color(0xFF38EF7D)],
-          ),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF11998E).withOpacity(0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: const Icon(Icons.qr_code_scanner_rounded,
-            color: Colors.white, size: 26),
-      ),
-    );
-  }
 
   Widget _buildAppBar() {
   return FadeInDown(
@@ -458,6 +448,7 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
       {'icon': Icons.history_rounded, 'label': 'History', 'color': const Color(0xFFE91E63), 'bg': const Color(0xFFFCE4EC), 'screen': 'history'},
       {'icon': Icons.receipt_rounded, 'label': 'Bills', 'color': const Color(0xFF009688), 'bg': const Color(0xFFE0F2F1), 'screen': 'bills'},
       {'icon': Icons.verified_user_rounded, 'label': 'KYC', 'color': const Color(0xFF9C27B0), 'bg': const Color(0xFFF3E5F5), 'screen': 'kyc'},
+      {'icon': Icons.qr_code_rounded, 'label': 'My QR', 'color': const Color(0xFF6C63FF), 'bg': const Color(0xFFEEEDFE), 'screen': 'myqr'},
     ];
 
     return FadeInUp(
@@ -493,6 +484,12 @@ class _PremiumHomeScreenState extends State<PremiumHomeScreen>
                 } else if (screen == 'kyc') {
                   Navigator.push(context, MaterialPageRoute(
                       builder: (_) => KYCScreen(userId: widget.userId)));
+                } else if (screen == 'myqr') {
+                  Navigator.push(context, MaterialPageRoute(
+                      builder: (_) => MyQRScreen(
+                            userId: widget.userId,
+                            userName: widget.userName,
+                          )));
                 }
               },
               child: Container(
